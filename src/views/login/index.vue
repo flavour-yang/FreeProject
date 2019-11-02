@@ -1,7 +1,7 @@
 <!--
  * @Author: your name
  * @Date: 2019-10-29 14:04:54
- * @LastEditTime: 2019-11-02 11:22:58
+ * @LastEditTime: 2019-11-02 12:28:36
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \vue-admin-template\src\views\login\index.vue
@@ -73,7 +73,8 @@
 
 <script>
 import { validUsername } from '@/utils/validate'
-var MD5 = require('blueimp-md5/js/md5')
+// var MD5 = require('blueimp-md5/js/md5')
+import MD5 from 'js-md5'
 export default {
   name: 'Login',
   data() {
@@ -132,7 +133,7 @@ export default {
       this.$refs.loginForm.validate(valid => {
         const loginInfo = {
           LoginName: this.loginForm.LoginName,
-          Password: MD5(this.loginForm.Password)
+          Password: MD5.base64(this.loginForm.Password)
         }
         if (valid) {
           this.loading = true

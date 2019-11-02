@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2019-10-29 14:04:54
- * @LastEditTime: 2019-10-29 16:55:16
+ * @LastEditTime: 2019-11-02 12:47:31
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \vue-admin-template\src\permission.js
@@ -41,7 +41,7 @@ router.beforeEach(async(to, from, next) => {
       } else {
         try {
           // get user info
-          await store.dispatch('user/getInfo')
+          // await store.dispatch('user/getInfo')
 
           next()
         } catch (error) {

@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2019-10-29 14:04:54
- * @LastEditTime: 2019-11-02 11:04:52
+ * @LastEditTime: 2019-11-02 12:56:57
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \vue-admin-template\src\store\modules\user.js
@@ -38,6 +38,8 @@ const actions = {
         debugger
         const { data } = response
         commit('SET_TOKEN', data.token)
+        commit('SET_NAME', data.loginName)
+        commit('SET_AVATAR', 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif')
         setToken(data.token)
         resolve()
       }).catch(error => {
@@ -86,16 +88,17 @@ const actions = {
   },
   // user logout
   logout({ commit, state }) {
-    return new Promise((resolve, reject) => {
-      logout(state.token).then(() => {
-        commit('SET_TOKEN', '')
-        removeToken()
-        resetRouter()
-        resolve()
-      }).catch(error => {
-        reject(error)
-      })
-    })
+    debugger
+    // return new Promise((resolve, reject) => {
+    // logout(state.token).then(() => {
+    commit('SET_TOKEN', '')
+    removeToken()
+    resetRouter()
+    // resolve()
+    // }).catch(error => {
+    // reject(error)
+    // })
+    // })
   },
 
   // remove token
