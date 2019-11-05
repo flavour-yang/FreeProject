@@ -7,3 +7,11 @@ export function getList(params) {
     params
   })
 }
+
+export function getProjectList(params) {
+  return request({
+    url: '/api/v1/Project/list',
+    method: 'get',
+    params
+  })
+}

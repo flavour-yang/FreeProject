@@ -22,8 +22,30 @@
         value-format="yyyy-M"
       />
     </div>
+    <!-- <div v-for="item in echartList"/> -->
+    <div class="echart-content">
+      <!-- 柱 -->
+      <div id="sales" />
+      <!-- 柱 -->
+      <div id="order" />
+      <!-- 折线 -->
+      <div id="ucr" />
+      <!-- 柱 -->
+      <div id="session" />
+      <!-- 柱 -->
+      <div id="spend" />
+      <!-- 柱 -->
+      <div id="AD_order" />
+      <!-- 折线 -->
+      <div id="AD_cr" />
+      <!-- 柱 -->
+      <div id="AD_sales" />
+      <!-- 折线 -->
+      <div id="AD_acos" />
 
-    <div id="echart" />getElemen
+      <div id="echart" class="echarts" />
+      <div id="echart1" class="echarts" />
+    </div>
   </div>
 </template>
 
@@ -36,6 +58,7 @@ export default {
       myChart: null,
       pickerData: '',
       dateList: [],
+      echartList: [],
       pickerOptions: {
         shortcuts: [
           {
@@ -66,7 +89,11 @@ export default {
             }
           }
         ]
-      }
+      },
+      now: +new Date(1997, 9, 3),
+      oneDay: 24 * 3600 * 1000,
+      value: Math.random() * 1000,
+      data1: []
     }
   },
   watch: {
@@ -83,7 +110,11 @@ export default {
     for (var i = 1; i < 13; i++) {
       this.dateList.push(i + '月份')
     }
+    for (var j = 0; j < 1000; j++) {
+      this.data1.push(this.randomData())
+    }
     this.initEchart()
+    this.initLineChart()
     // this.chart = echarts.init(document.getElementById("echart"));
   },
   destroyed() {
@@ -306,18 +337,89 @@ export default {
         calculable: false
       })
       window.addEventListener('resize', this.resizeChart)
+    },
+    initLineChart() {
+      this.myChart1 = echarts.init(document.getElementById('echart1'), 'light')
+
+      this.myChart1.setOption({
+        title: {
+          text: '动态数据 + 时间坐标轴'
+        },
+        tooltip: {
+          trigger: 'axis',
+          formatter: function(params) {
+            params = params[0]
+            var date = new Date(params.name)
+            return (
+              date.getDate() +
+              '/' +
+              (date.getMonth() + 1) +
+              '/' +
+              date.getFullYear() +
+              ' : ' +
+              params.value[1]
+            )
+          },
+          axisPointer: {
+            animation: false
+          }
+        },
+        xAxis: {
+          type: 'time',
+          splitLine: {
+            show: false
+          }
+        },
+        yAxis: {
+          type: 'value',
+          boundaryGap: [0, '100%'],
+          splitLine: {
+            show: false
+          }
+        },
+        series: [
+          {
+            name: '模拟数据',
+            type: 'line',
+            showSymbol: false,
+            hoverAnimation: false,
+            data: this.data1
+          }
+        ]
+      })
+    },
+
+    randomData() {
+      this.now = new Date(+this.now + this.oneDay)
+      this.value = this.value + Math.random() * 21 - 10
+      return {
+        name: this.now.toString(),
+        value: [
+          [
+            this.now.getFullYear(),
+            this.now.getMonth() + 1,
+            this.now.getDate()
+          ].join('/'),
+          Math.round(this.value)
+        ]
+      }
     }
   }
 }
 </script>
-
-<style>
+<style lang="scss" scoped>
 .content {
   width: 100%;
   height: calc(100vh - 50px);
 }
-#echart {
+.echart-content {
+  padding: 10px;
   width: 100%;
   height: 100%;
+  .echarts {
+    margin-left: 10px;
+    width: 300px;
+    height: 300px;
+  }
 }
 </style>
