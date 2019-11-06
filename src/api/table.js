@@ -10,7 +10,7 @@ export function getList(params) {
 
 export function getProjectList(params) {
   return request({
-    url: '/api/v1/Project/list',
+    url: '/api/v1/Product/list',
     method: 'get',
     params
   })

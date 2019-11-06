@@ -6,7 +6,7 @@
  * @Description: In User Settings Edit
  * @FilePath: \vue-admin-template\src\store\modules\user.js
  */
-import { login, logout, getInfo } from "@/api/user";
+import { login } from "@/api/user"; //logout, getInfo
 import { getToken, setToken, removeToken } from "@/utils/auth";
 import { resetRouter } from "@/router";
 import { setLocalStore, getLocalstore } from "@/localStroe";
@@ -111,7 +111,7 @@ const actions = {
   },
   // user logout
   logout({ commit, state }) {
-    debugger;
+    // debugger;
     // return new Promise((resolve, reject) => {
     // logout(state.token).then(() => {
     commit("SET_TOKEN", "");

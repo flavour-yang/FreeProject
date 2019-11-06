@@ -281,7 +281,7 @@ $light_gray: #eee;
     right: 0;
     bottom: 0;
     z-index: -1;
-    background: url("../../assets/login/sun.jpg") no-repeat center / cover;
+    background: url("../../assets/login/login.jpg") no-repeat center / cover;
     transform: scale(1.01);
     filter: blur(5px);
     &::after {
