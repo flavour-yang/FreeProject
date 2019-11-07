@@ -1,12 +1,12 @@
 /*
  * @Author: your name
  * @Date: 2019-10-29 14:04:54
- * @LastEditTime: 2019-11-02 12:56:57
+ * @LastEditTime: 2019-11-07 15:05:45
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \vue-admin-template\src\store\modules\user.js
  */
-import { login } from "@/api/user"; //logout, getInfo
+import { login } from "@/api/user"; // logout, getInfo
 import { getToken, setToken, removeToken } from "@/utils/auth";
 import { resetRouter } from "@/router";
 import { setLocalStore, getLocalstore } from "@/localStroe";
@@ -44,13 +44,14 @@ const actions = {
           commit("SET_NAME", data.loginName);
           commit(
             "SET_AVATAR",
-            "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
+            require('@/assets/user/manage.png')
           );
+          "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
           setToken(data.token);
           setLocalStore("username", data.loginName);
           setLocalStore(
             "avatar",
-            "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
+            require('@/assets/user/manage.png')
           );
           resolve();
         })
@@ -76,7 +77,7 @@ const actions = {
       if (getLocalstore('username')) {
         commit("SET_NAME", getLocalstore('username'));
         commit("SET_AVATAR", getLocalstore('avatar'));
-        resolve({'state': 1})
+        resolve({ 'state': 1 })
       } else {
         reject('error');
       }

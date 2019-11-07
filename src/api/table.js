@@ -15,3 +15,12 @@ export function getProjectList(params) {
     params
   })
 }
+
+export function postProjectPicture(data) {
+  return request({
+    url: '/api/v1/Product/AddProductPicture',
+    method: 'post',
+    data
+  })
+}
+

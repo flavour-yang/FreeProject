@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2019-10-29 14:04:54
- * @LastEditTime: 2019-11-05 16:29:09
+ * @LastEditTime: 2019-11-07 11:31:10
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \vue-admin-template\src\router\index.js
@@ -94,6 +94,18 @@ export const constantRoutes = [
         name: 'Table',
         component: () => import('@/views/table/index'),
         meta: { title: 'Table', icon: 'table' }
+      }
+    ]
+  },
+  {
+    path: '/password',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: 'Password',
+        component: () => import('@/views/password/index'),
+        meta: { title: 'password', icon: 'nested' }
       }
     ]
   },

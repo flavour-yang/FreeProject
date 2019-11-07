@@ -1,25 +1,45 @@
-<style lang="scss">
+<style lang="scss" scoped>
 .upload-demo {
   margin-bottom: 10px;
+}
+.list-image {
+  width: 40px;
+}
+/deep/ {
+  .is-leaf {
+    background: #409eff;
+    color: #fff;
+  }
+}
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
 }
 </style>
 <template>
   <div class="app-container">
-    <el-upload
-      ref="upload"
-      class="upload-demo"
-      action="http://120.26.222.134:9005/api/v1/product/upload/"
-      :on-preview="handlePreview"
-      :on-remove="handleRemove"
-      :on-success="handleSucess"
-      :on-error="handleError"
-      :file-list="fileList"
-      :auto-upload="false"
-    >
-      <el-button slot="trigger" size="small" type="primary">上传产品</el-button>
-      <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">确定</el-button>
-      <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
-    </el-upload>
+    <div class="table-header">
+      <el-upload
+        class="upload-demo"
+        action="http://120.26.222.134:9005/api/v1/product/upload/"
+        :on-preview="handlePreview"
+        :on-remove="handleRemove"
+        :on-success="handleSucess"
+        :on-error="handleError"
+        :before-upload="beforeUpload"
+        multiple
+        :file-list="fileList"
+        :show-file-list="false"
+      >
+        <el-button slot="trigger" size="small" type="primary">上传产品</el-button>
+      </el-upload>
+      <el-input v-model="searchVal" placeholder="输入站点,产品名称进行查询" style="width: 300px;">
+        <template slot="append">
+          <el-button icon="el-icon-search" @click="handleSearch" />
+        </template>
+      </el-input>
+    </div>
     <!-- <el-upload
       ref="upload"
       class="upload-demo"
@@ -44,48 +64,50 @@
       fit
       highlight-current-row
     >
-      <!-- <el-table-column align="center" label="ID" width="95">
-        <template slot-scope="scope">{{ scope.$index }}</template>
-      </el-table-column>-->
-      <el-table-column label="asin" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.asin }}</span>
-        </template>
-      </el-table-column>
       <el-table-column label="产品图片" align="center">
         <template slot-scope="scope">
           <el-upload
-            v-if="!scope.row.picturePath"
-            class="upload-demo"
             action="http://120.26.222.134:9005/api/v1/Attachment/upload"
             :on-preview="handlePreview"
             :on-remove="handleRemove"
             :on-success="handleListSucess"
-            multiple
-            :limit="3"
+            :on-error="handleListError"
+            :before-upload="beforeUploadList"
+            :multiple="false"
+            :limit="1"
             :file-list="fileList"
+            :show-file-list="false"
           >
-            <el-button size="small" type="primary">点击上传</el-button>
+            <el-button
+              v-if="!scope.row.picturePath"
+              size="mini"
+              type="primary"
+              @click="handleUpload(scope.row.id)"
+            >点击上传</el-button>
+            <img
+              v-if="scope.row.picturePath"
+              :src="scope.row.picturePath"
+              width="40"
+              @click="handleUpload(scope.row.id)"
+            >
           </el-upload>
-          <!-- :preview-src-list="srcList"/ -->
-          <el-image
-            v-if="scope.row.picturePath"
-            style="height: 40px"
-            :src="scope.row.picturePath"
-            :preview-src-list="srcList"
-            @click.native="handleImg(scope.row.picturePath)"
-          />
-          <!-- <img v-if="scope.row.picturePath" :src="scope.row.picturePath" alt width="40" /> -->
         </template>
-      </el-table-column>
-
-      <el-table-column label="产品">
-        <template slot-scope="scope">{{ scope.row.name }}</template>
       </el-table-column>
       <el-table-column label="站点" align="center">
         <template slot-scope="scope">{{ scope.row.station }}</template>
       </el-table-column>
-      <el-table-column label="sku" align="center">
+      <el-table-column label="产品线" align="center">
+        <template slot-scope="scope">{{ scope.row.line }}</template>
+      </el-table-column>
+      <!-- <el-table-column label="产品" align="center">
+        <template slot-scope="scope">{{ scope.row.name }}</template>
+      </el-table-column>-->
+      <el-table-column label="ASIN" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.asin }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="FNSKU" align="center">
         <template slot-scope="scope">{{ scope.row.sku }}</template>
       </el-table-column>
       <!-- <el-table-column class-name="status-col" label="Status" width="110" align="center">
@@ -110,12 +132,11 @@
         @current-change="handleCurrentChange"
       />
     </div>
-
   </div>
 </template>
 
 <script>
-import { getProjectList } from "@/api/table";
+import { getProjectList, postProjectPicture } from "@/api/table";
 
 export default {
   filters: {
@@ -135,22 +156,9 @@ export default {
       total: 0,
       pageSize: 10,
       currentPage: 1,
-      srcList: [
-        "https://fuss10.elemecdn.com/8/27/f01c15bb73e1ef3793e64e6b7bbccjpeg.jpeg",
-        "https://fuss10.elemecdn.com/1/8e/aeffeb4de74e2fde4bd74fc7b4486jpeg.jpeg"
-      ],
-      fileList: [
-        // {
-        //   name: 'food.jpeg',
-        //   url:
-        //     'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-        // },
-        // {
-        //   name: 'food2.jpeg',
-        //   url:
-        //     'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
-        // }
-      ]
+      srcList: [],
+      fileList: [],
+      searchVal: ""
     };
   },
   created() {
@@ -170,28 +178,28 @@ export default {
     },
     fetchData() {
       this.listLoading = true;
-      getProjectList({
+      const params = {
+        // StationName: this.searchVal,
+        Key: this.searchVal,
         pageSize: this.pageSize,
         pageIndex: this.currentPage
-      }).then(response => {
+      };
+      getProjectList(params).then(response => {
         const res = response.data;
         this.list = res.dataList;
         this.total = res.dataCount;
         this.listLoading = false;
       });
     },
+    handleSearch() {
+      this.currentPage = 1;
+      this.fetchData();
+    },
     submitUpload() {
-      this.loading = this.$loading({
-        lock: true,
-        text: "Loading",
-        spinner: "el-icon-loading",
-        background: "rgba(0, 0, 0, 0.7)"
-      });
       // setTimeout(()=>{
-
       // })
-      debugger;
-      this.$refs.upload.submit();
+      // debugger;
+      // this.$refs.upload.submit();
     },
     handleRemove(file, fileList) {
       console.log(file, fileList);
@@ -199,14 +207,65 @@ export default {
     handleSucess() {
       this.loading.close();
     },
-    handleListSucess(a, b, c) {
-    },
     handleError() {
       this.loading.close();
     },
     handlePreview(file) {
       console.log(file);
-    }
+    },
+    handleUpload(id) {
+      this.projectId = id;
+    },
+    beforeUpload(file) {
+      const type = file.name.split(".")[1];
+      if (type !== "csv" && type !== "xlsx" && type !== "xls") {
+        this.$message.error("文件只支持 csv,xlsx,xls 格式!");
+        // this.loading.close();
+        return false;
+      }
+      this.loading = this.$loading({
+        lock: true,
+        text: "Loading",
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.7)"
+      });
+    },
+    beforeUploadList(file) {
+      const type = file.type;
+      if (
+        type !== "image/jpeg" &&
+        type !== "image/png" &&
+        type !== "image/jpg"
+      ) {
+        this.$message.error("上传图片只能是 jpeg,png,jpg 格式!");
+        return false;
+      }
+      // return type
+      // if(file.type)
+      // const isJPG = file.type === 'image/jpg';
+      // const isLt2M = file.size / 1024 / 1024 < 2;
+
+      // if (!isJPG) {
+      //   this.$message.error('上传头像图片只能是 JPG 格式!');
+      // }
+      // if (!isLt2M) {
+      //   this.$message.error('上传头像图片大小不能超过 2MB!');
+      // }
+      // return isJPG && isLt2M;
+    },
+    handleListSucess(a, b, c) {
+      if (a.code === 1000) {
+        return postProjectPicture({
+          productId: this.projectId,
+          attachGuid: a.data[0]
+        }).then(res => {
+          if (res.code === 1000) {
+            this.fetchData();
+          }
+        });
+      }
+    },
+    handleListError() {}
   }
 };
 </script>
