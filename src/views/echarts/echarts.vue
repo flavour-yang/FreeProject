@@ -50,42 +50,42 @@
 </template>
 
 <script>
-import echarts from 'echarts'
+import echarts from "echarts";
 
 export default {
   data() {
     return {
       myChart: null,
-      pickerData: '',
+      pickerData: "",
       dateList: [],
       echartList: [],
       pickerOptions: {
         shortcuts: [
           {
-            text: '最近一周',
+            text: "最近一周",
             onClick(picker) {
-              const end = new Date()
-              const start = new Date()
-              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
-              picker.$emit('pick', [start, end])
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", [start, end]);
             }
           },
           {
-            text: '最近一个月',
+            text: "最近一个月",
             onClick(picker) {
-              const end = new Date()
-              const start = new Date()
-              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
-              picker.$emit('pick', [start, end])
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+              picker.$emit("pick", [start, end]);
             }
           },
           {
-            text: '最近三个月',
+            text: "最近三个月",
             onClick(picker) {
-              const end = new Date()
-              const start = new Date()
-              start.setTime(start.getTime() - 3600 * 1000 * 24 * 90)
-              picker.$emit('pick', [start, end])
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+              picker.$emit("pick", [start, end]);
             }
           }
         ]
@@ -94,38 +94,39 @@ export default {
       oneDay: 24 * 3600 * 1000,
       value: Math.random() * 1000,
       data1: []
-    }
+    };
   },
   watch: {
     pickerData(val) {
-      const time = val[1].split('-')[1] - val[0].split('-')[1]
-      this.dateList = []
-      for (let i = val[0].split('-')[1]; i <= time + 1; i++) {
-        this.dateList.push(i + '月份')
+      const time = val[1].split("-")[1] - val[0].split("-")[1];
+      this.dateList = [];
+      for (let i = val[0].split("-")[1]; i <= time + 1; i++) {
+        this.dateList.push(i + "月份");
       }
-      this.initEchart()
+      this.initEchart();
     }
   },
   mounted() {
-    for (var i = 1; i < 13; i++) {
-      this.dateList.push(i + '月份')
-    }
+    // for (var i = 1; i < 13; i++) {
+    //   this.dateList.push(i + '月份')
+    // }
+    this.dateList = ["一月", "二月", "三月"];
     for (var j = 0; j < 1000; j++) {
-      this.data1.push(this.randomData())
+      this.data1.push(this.randomData());
     }
-    this.initEchart()
-    this.initLineChart()
+    this.initEchart();
+    this.initLineChart();
     // this.chart = echarts.init(document.getElementById("echart"));
   },
   destroyed() {
-    window.removeEventListener('resize', this.resizeChart)
+    window.removeEventListener("resize", this.resizeChart);
   },
   methods: {
     resizeChart() {
       this.myChart.resize({
-        width: 'auto',
-        height: 'auto'
-      })
+        width: "auto",
+        height: "auto"
+      });
     },
     initEchart() {
       // xData = xData || [];
@@ -133,11 +134,11 @@ export default {
       // yData.forEach(item => {
       //   item.type = "bar";
       // });
-      this.myChart = echarts.init(document.getElementById('echart'), 'light')
+      this.myChart = echarts.init(document.getElementById("echart"), "light");
       // 绘制图表
       this.myChart.setOption({
         title: {
-          text: '统计测试',
+          text: "统计测试",
           left: 10,
           top: 10,
           textStyle: {
@@ -146,30 +147,30 @@ export default {
           }
         },
         tooltip: {
-          trigger: 'axis'
+          trigger: "axis"
         },
         legend: {
-          top: '4%',
-          data: ['男', '女', '总数']
+          top: "4%",
+          data: ["男", "女", "总数"]
         },
         grid: {
-          bottom: '10%',
-          top: '20%',
-          left: '4%',
-          right: '4%'
+          bottom: "10%",
+          top: "20%",
+          left: "4%",
+          right: "4%"
         },
         toolbox: {
           show: true,
           feature: {
             dataZoom: {
-              yAxisIndex: 'none'
+              yAxisIndex: "none"
             },
             mark: {
               show: true
             },
             magicType: {
               show: true,
-              type: ['line', 'bar']
+              type: ["line", "bar"]
             },
             restore: {
               show: true
@@ -193,7 +194,7 @@ export default {
         // ],
         xAxis: [
           {
-            type: 'category',
+            type: "category",
             boundaryGap: true, // 刻度显示
             data: this.dateList // x轴值
           }
@@ -202,196 +203,212 @@ export default {
           {
             splitLine: {
               lineStyle: {
-                type: 'dashed'
+                type: "dashed"
               }
             },
-            type: 'value',
-            name: '数量'
+            type: "value",
+            name: "数量"
           }
         ],
         series: [
           {
-            name: '总数',
-            type: 'line',
-            stack: '总量',
+            name: "总数",
+            type: "line",
+            stack: "总量",
             symbolSize: 10,
-            symbol: 'circle',
+            symbol: "circle",
             itemStyle: {
               normal: {
-                color: 'rgba(252,230,48,1)',
+                color: "rgba(252,230,48,1)",
                 barBorderRadius: 0,
                 label: {
                   // show: true,
-                  position: 'top'
+                  position: "top"
                   // formatter: function(p) {
                   //   return p.value > 0 ? p.value : ''
                   // }
                 }
               }
             },
-            data: [
-              1036,
-              3693,
-              2962,
-              3810,
-              2519,
-              1915,
-              1748,
-              4675,
-              6209,
-              4323,
-              2865,
-              4298
-            ]
+            data: [5, 10, 4]
+            // data: [
+            //   1036,
+            //   3693,
+            //   2962,
+            //   3810,
+            //   2519,
+            //   1915,
+            //   1748,
+            //   4675,
+            //   6209,
+            //   4323,
+            //   2865,
+            //   4298
+            // ]
           },
           {
-            name: '女',
-            type: 'bar',
-            stack: '总量',
+            name: "A",
+            type: "bar",
+            stack: "总量",
             barMaxWidth: 35,
-            barGap: '10%',
+            barGap: "10%",
             itemStyle: {
               normal: {
-                color: 'rgba(255,144,128,1)',
+                color: "rgba(255,144,128,1)",
                 label: {
                   show: true,
                   textStyle: {
-                    color: '#fff'
+                    color: "#fff"
                   },
-                  position: 'insideTop',
+                  position: "insideTop",
                   formatter: function(p) {
-                    return p.value > 0 ? p.value : ''
+                    return p.value > 0 ? p.value : "";
                   }
                 }
               }
             },
-            data: [
-              709,
-              1917,
-              2455,
-              2610,
-              1719,
-              1433,
-              1544,
-              3285,
-              5208,
-              3372,
-              2484,
-              4078
-            ]
+            data: [1, 3, 2]
+            // data: [
+            //   709,
+            //   1917,
+            //   2455,
+            //   2610,
+            //   1719,
+            //   1433,
+            //   1544,
+            //   3285,
+            //   5208,
+            //   3372,
+            //   2484,
+            //   4078
+            // ]
           },
 
           {
-            name: '男',
-            type: 'bar',
-            stack: '总量',
+            name: "B",
+            type: "bar",
+            stack: "总量",
             itemStyle: {
               normal: {
-                color: 'rgba(0,191,183,1)',
+                color: "rgba(0,191,183,1)",
                 barBorderRadius: 0,
                 label: {
                   show: true,
-                  position: 'top',
+                  position: "top",
                   formatter: function(p) {
-                    return p.value > 0 ? p.value : ''
+                    return p.value > 0 ? p.value : "";
                   }
                 }
               }
             },
-            data: [
-              327,
-              1776,
-              507,
-              1200,
-              800,
-              482,
-              204,
-              1390,
-              1001,
-              951,
-              381,
-              220
-            ]
+            data: [3, 4, 1]
+            // data: [
+            //   327,
+            //   1776,
+            //   507,
+            //   1200,
+            //   800,
+            //   482,
+            //   204,
+            //   1390,
+            //   1001,
+            //   951,
+            //   381,
+            //   220
+            // ]
+          },
+          {
+            name: "C",
+            type: "bar",
+            stack: "总量",
+            itemStyle: {
+              normal: {
+                color: "rgba(200,191,2,1)",
+                barBorderRadius: 0,
+                label: {
+                  show: true,
+                  position: "top",
+                  formatter: function(p) {
+                    return p.value > 0 ? p.value : "";
+                  }
+                }
+              }
+            },
+            data: [1, 3, 1]
+            // data: [
+            //   327,
+            //   1776,
+            //   507,
+            //   1200,
+            //   800,
+            //   482,
+            //   204,
+            //   1390,
+            //   1001,
+            //   951,
+            //   381,
+            //   220
+            // ]
           }
-
-          // {
-          //   name: '总数',
-          //   type: 'bar',
-          //   stack: '总量',
-          //   data: [
-          //     1036,
-          //     3693,
-          //     2962,
-          //     3810,
-          //     2519,
-          //     1915,
-          //     1748,
-          //     4675,
-          //     6209,
-          //     4323,
-          //     2865,
-          //     4298
-          //   ]
-          // }
         ],
         calculable: false
-      })
-      window.addEventListener('resize', this.resizeChart)
+      });
+      window.addEventListener("resize", this.resizeChart);
     },
     initLineChart() {
-      this.myChart1 = echarts.init(document.getElementById('echart1'), 'light')
+      this.myChart1 = echarts.init(document.getElementById("echart1"), "light");
 
       this.myChart1.setOption({
         title: {
-          text: '动态数据 + 时间坐标轴'
+          text: "动态数据 + 时间坐标轴"
         },
         tooltip: {
-          trigger: 'axis',
+          trigger: "axis",
           formatter: function(params) {
-            params = params[0]
-            var date = new Date(params.name)
+            params = params[0];
+            var date = new Date(params.name);
             return (
               date.getDate() +
-              '/' +
+              "/" +
               (date.getMonth() + 1) +
-              '/' +
+              "/" +
               date.getFullYear() +
-              ' : ' +
+              " : " +
               params.value[1]
-            )
+            );
           },
           axisPointer: {
             animation: false
           }
         },
         xAxis: {
-          type: 'time',
+          type: "time",
           splitLine: {
             show: false
           }
         },
         yAxis: {
-          type: 'value',
-          boundaryGap: [0, '100%'],
+          type: "value",
+          boundaryGap: [0, "100%"],
           splitLine: {
             show: false
           }
         },
         series: [
           {
-            name: '模拟数据',
-            type: 'line',
+            name: "模拟数据",
+            type: "line",
             showSymbol: false,
             hoverAnimation: false,
             data: this.data1
           }
         ]
-      })
+      });
     },
 
     randomData() {
-      this.now = new Date(+this.now + this.oneDay)
-      this.value = this.value + Math.random() * 21 - 10
+      this.now = new Date(+this.now + this.oneDay);
+      this.value = this.value + Math.random() * 21 - 10;
       return {
         name: this.now.toString(),
         value: [
@@ -399,13 +416,15 @@ export default {
             this.now.getFullYear(),
             this.now.getMonth() + 1,
             this.now.getDate()
-          ].join('/'),
+          ].join("/"),
           Math.round(this.value)
         ]
-      }
+      };
     }
   }
-}
+};
+// X轴: ['一月','二月','三月']
+// Y轴: [[5,10,4],[1,3,2],[3,4,1],[1,3,1]]
 </script>
 <style lang="scss" scoped>
 .content {
@@ -418,8 +437,8 @@ export default {
   height: 100%;
   .echarts {
     margin-left: 10px;
-    width: 300px;
-    height: 300px;
+    width: 600px;
+    height: 400px;
   }
 }
 </style>

@@ -10,6 +10,9 @@
     background: #409eff;
     color: #fff;
   }
+  .highlight {
+    color: #fff !important;
+  }
 }
 .table-header {
   display: flex;
@@ -85,6 +88,7 @@
       border
       fit
       highlight-current-row
+      @filter-change="fnFilterChangeInit"
     >
       <el-table-column label="产品图片" align="center">
         <template slot-scope="scope">
@@ -115,10 +119,35 @@
           </el-upload>
         </template>
       </el-table-column>
-      <el-table-column label="站点" align="center">
+      <el-table-column
+        label="站点"
+        :filters="filterStationList"
+        :filter-method="filterTag"
+        column-key="tag"
+        filter-placement="bottom"
+        align="center"
+      >
+        <!-- <template slot="header"> -->
+        <!-- <span slot="header" @click="clickTitle">
+          站点
+          <i v-if="showStationFilter" class="el-icon-arrow-down" />
+          <i v-if="showStationFilter" class="el-icon-arrow-right" />
+          <span>{{ stationList.length }}</span>
+          <div v-if="filterStationList.length" style="position: absolute;right: 38px;top: -9px;">
+            <span v-for="(item,index) in filterStationList" :key="index">{{ item }}</span>
+          </div>
+        </span>-->
+
+        <!-- </template> -->
         <template slot-scope="scope">{{ scope.row.station }}</template>
       </el-table-column>
-      <el-table-column label="产品线" align="center">
+      <el-table-column
+        filter-placement="bottom"
+        :filters="filterLinesList"
+        column-key="line"
+        label="产品线"
+        align="center"
+      >
         <template slot-scope="scope">{{ scope.row.line }}</template>
       </el-table-column>
       <!-- <el-table-column label="产品" align="center">
@@ -165,7 +194,8 @@ import {
   getProjectList,
   postProjectPicture,
   getExcelTypes,
-  getStations
+  getStations,
+  getLines
 } from "@/api/table";
 
 export default {
@@ -192,8 +222,28 @@ export default {
       excelList: [],
       stationList: [],
       excelValue: "",
-      stationValue: ""
+      stationValue: "",
+      showStationFilter: true,
+      station: "",
+      line: "",
+      linesList: []
     };
+  },
+  computed: {
+    filterStationList() {
+      const arr = [];
+      this.stationList.forEach(item => {
+        arr.push({ text: item, value: item });
+      });
+      return arr;
+    },
+    filterLinesList() {
+      const arr = [];
+      this.linesList.forEach(item => {
+        arr.push({ text: item, value: item });
+      });
+      return arr;
+    }
   },
   created() {
     this.listLoading = true;
@@ -201,6 +251,7 @@ export default {
     this.fetchData();
     this._getStations();
     this._getExcelTypes();
+    this._getLines();
   },
   methods: {
     handleSizeChange() {},
@@ -292,10 +343,15 @@ export default {
       this.listLoading = true;
       const params = {
         // StationName: this.searchVal,
+        Stations: this.station,
+        Lines: this.line,
         Key: this.searchVal,
         pageSize: this.pageSize,
         pageIndex: this.currentPage
       };
+      for (const key in params) {
+        !params[key] && delete params[key];
+      }
       getProjectList(params).then(response => {
         const res = response.data;
         this.list = res.dataList;
@@ -303,14 +359,43 @@ export default {
         this.listLoading = false;
       });
     },
+
+    clickTitle() {
+      this.showStationFilter = !this.showStationFilter;
+      console.log(this.showStationFilter);
+    },
+    fnFilterChangeInit(filter) {
+      // do something
+      // debugger
+      // example 这里最好用if，没有if可以试试也许有奇迹
+      // debugger;
+      if (filter.tag) {
+        // 为什么这么处理 怕有些同学把undefined当一个字符串传给后台
+        this.station = filter.tag[0] === undefined ? "" : filter.tag[0];
+      }
+      if (filter.line) {
+        // 为什么这么处理 怕有些同学把undefined当一个字符串传给后台
+        this.line = filter.line[0] === undefined ? "" : filter.line[0];
+      }
+      this.fetchData();
+    },
+    filterTag(value, row, column) {
+      return true;
+    },
     _getStations() {
       getStations().then(res => {
         this.stationList = res.data;
+        console.log(this.stationList);
       });
     },
     _getExcelTypes() {
       getExcelTypes().then(res => {
         this.excelList = res.data;
+      });
+    },
+    _getLines() {
+      getLines().then(res => {
+        this.linesList = res.data;
       });
     }
   }

@@ -39,3 +39,12 @@ export function getStations(params) {
     params
   })
 }
+
+export function getLines(params) {
+  return request({
+    url: '/api/v1/Product/lines',
+    method: 'get',
+    params
+  })
+}
+
