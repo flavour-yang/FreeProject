@@ -1,6 +1,6 @@
 <style lang="scss" scoped>
 .upload-demo {
-  margin-bottom: 10px;
+  // margin-bottom: 10px;
 }
 .list-image {
   width: 40px;
@@ -15,26 +15,48 @@
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
+  .item-left {
+    display: flex;
+    align-items: center;
+    > div {
+      margin: 0 10px;
+    }
+  }
 }
 </style>
 <template>
   <div class="app-container">
     <div class="table-header">
-      <el-upload
-        class="upload-demo"
-        action="http://120.26.222.134:9005/api/v1/product/upload/"
-        :on-preview="handlePreview"
-        :on-remove="handleRemove"
-        :on-success="handleSucess"
-        :on-error="handleError"
-        :before-upload="beforeUpload"
-        multiple
-        :file-list="fileList"
-        :show-file-list="false"
-      >
-        <el-button slot="trigger" size="small" type="primary">上传产品</el-button>
-      </el-upload>
-      <el-input v-model="searchVal" placeholder="输入站点,产品名称进行查询" style="width: 300px;">
+      <div class="item-left">
+        <el-upload
+          class="upload-demo"
+          action="http://120.26.222.134:9005/api/v1/product/upload/"
+          :on-preview="handlePreview"
+          :on-remove="handleRemove"
+          :on-success="handleSucess"
+          :on-error="handleError"
+          :before-upload="beforeUpload"
+          :file-list="fileList"
+          :disabled="excelValue && stationValue"
+          :show-file-list="false"
+        >
+          <el-button
+            slot="trigger"
+            :disabled="excelValue && stationValue"
+            size="small"
+            type="primary"
+          >上传产品</el-button>
+        </el-upload>
+        <el-select v-model="excelValue" size="small" placeholder="请选择报表类型">
+          <el-option v-for="(item,index) in excelList" :key="index" :label="item" :value="item" />
+          <!-- 报表类型， 报表站点 -->
+        </el-select>
+        <el-select v-model="stationValue" size="small" placeholder="请选择站点">
+          <el-option v-for="(item,index) in stationList" :key="index" :label="item" :value="item" />
+          <!-- 报表类型， 报表站点 -->
+        </el-select>
+      </div>
+      <el-input v-model="searchVal" placeholder="输入ASIN,FNSKU进行查询" style="width: 300px;">
         <template slot="append">
           <el-button icon="el-icon-search" @click="handleSearch" />
         </template>
@@ -107,8 +129,11 @@
           <span>{{ scope.row.asin }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="FNSKU" align="center">
+      <el-table-column label="SKU" align="center">
         <template slot-scope="scope">{{ scope.row.sku }}</template>
+      </el-table-column>
+      <el-table-column label="FNSKU" align="center">
+        <template slot-scope="scope">{{ scope.row.fnsku }}</template>
       </el-table-column>
       <!-- <el-table-column class-name="status-col" label="Status" width="110" align="center">
         <template slot-scope="scope">
@@ -136,7 +161,12 @@
 </template>
 
 <script>
-import { getProjectList, postProjectPicture } from "@/api/table";
+import {
+  getProjectList,
+  postProjectPicture,
+  getExcelTypes,
+  getStations
+} from "@/api/table";
 
 export default {
   filters: {
@@ -158,13 +188,19 @@ export default {
       currentPage: 1,
       srcList: [],
       fileList: [],
-      searchVal: ""
+      searchVal: "",
+      excelList: [],
+      stationList: [],
+      excelValue: "",
+      stationValue: ""
     };
   },
   created() {
     this.listLoading = true;
     this.list = [];
     this.fetchData();
+    this._getStations();
+    this._getExcelTypes();
   },
   methods: {
     handleSizeChange() {},
@@ -176,21 +212,7 @@ export default {
       this.srcList = [];
       this.srcList.push(image);
     },
-    fetchData() {
-      this.listLoading = true;
-      const params = {
-        // StationName: this.searchVal,
-        Key: this.searchVal,
-        pageSize: this.pageSize,
-        pageIndex: this.currentPage
-      };
-      getProjectList(params).then(response => {
-        const res = response.data;
-        this.list = res.dataList;
-        this.total = res.dataCount;
-        this.listLoading = false;
-      });
-    },
+
     handleSearch() {
       this.currentPage = 1;
       this.fetchData();
@@ -265,7 +287,32 @@ export default {
         });
       }
     },
-    handleListError() {}
+    handleListError() {},
+    fetchData() {
+      this.listLoading = true;
+      const params = {
+        // StationName: this.searchVal,
+        Key: this.searchVal,
+        pageSize: this.pageSize,
+        pageIndex: this.currentPage
+      };
+      getProjectList(params).then(response => {
+        const res = response.data;
+        this.list = res.dataList;
+        this.total = res.dataCount;
+        this.listLoading = false;
+      });
+    },
+    _getStations() {
+      getStations().then(res => {
+        this.stationList = res.data;
+      });
+    },
+    _getExcelTypes() {
+      getExcelTypes().then(res => {
+        this.excelList = res.data;
+      });
+    }
   }
 };
 </script>

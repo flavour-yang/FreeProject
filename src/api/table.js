@@ -23,4 +23,19 @@ export function postProjectPicture(data) {
     data
   })
 }
-
+// 报表类型
+export function getExcelTypes(params) {
+  return request({
+    url: '/api/v1/Product/excelTypes',
+    method: 'get',
+    params
+  })
+}
+// 报表站点
+export function getStations(params) {
+  return request({
+    url: '/api/v1/Product/stations',
+    method: 'get',
+    params
+  })
+}
