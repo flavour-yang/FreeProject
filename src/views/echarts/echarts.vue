@@ -51,7 +51,7 @@
 
 <script>
 import echarts from "echarts";
-
+import { getRecent } from "@/api/table";
 export default {
   data() {
     return {
@@ -116,6 +116,16 @@ export default {
     }
     this.initEchart();
     this.initLineChart();
+    const asin = this.$route.query.asin;
+    // debugger
+    if (asin) {
+      this._getRecent(asin);
+    }
+    //     refundRate: 0 //最近三十天退货率
+    // sales: 151 // 销售额
+    // spends: 0 //30天花费
+    // ucr: 57.14 //最近三十天UCR
+    // unitsOrders: 20 // 销量
     // this.chart = echarts.init(document.getElementById("echart"));
   },
   destroyed() {
@@ -420,6 +430,11 @@ export default {
           Math.round(this.value)
         ]
       };
+    },
+    _getRecent(value) {
+      getRecent({ asin: value }).then(res => {
+        // debugger;
+      });
     }
   }
 };

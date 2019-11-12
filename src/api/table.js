@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-
+import qs from 'qs'
 export function getList(params) {
   return request({
     url: '/table/list',
@@ -9,9 +9,20 @@ export function getList(params) {
 }
 
 export function getProjectList(params) {
+  // params.paramsSerializer = params => {
+  //   return qs.stringify(params, {
+  //     indices: false
+  //   })
+  // }
+  // params = qs.stringify(params, {
+  //   indices: false
+  // })
   return request({
     url: '/api/v1/Product/list',
     method: 'get',
+    paramsSerializer: function(params) {
+      return qs.stringify(params, { indices: false })
+    },
     params
   })
 }
@@ -39,10 +50,18 @@ export function getStations(params) {
     params
   })
 }
-
+// 获取产品线
 export function getLines(params) {
   return request({
     url: '/api/v1/Product/lines',
+    method: 'get',
+    params
+  })
+}
+
+export function getRecent(params) {
+  return request({
+    url: '/api/v1/Product/GetRecentData',
     method: 'get',
     params
   })

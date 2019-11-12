@@ -13,6 +13,9 @@
   .highlight {
     color: #fff !important;
   }
+  .el-table__column-filter-trigger i {
+    color: #fff !important;
+  }
 }
 .table-header {
   display: flex;
@@ -155,7 +158,7 @@
       </el-table-column>-->
       <el-table-column label="ASIN" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.asin }}</span>
+          <span @click="handleAsin(scope.row.asin)">{{ scope.row.asin }}</span>
         </template>
       </el-table-column>
       <el-table-column label="SKU" align="center">
@@ -254,6 +257,10 @@ export default {
     this._getLines();
   },
   methods: {
+    handleAsin(value) {
+      // console.log(1)
+      this.$router.push({ path: "/echarts/echarts", query: { asin: value }});
+    },
     handleSizeChange() {},
     handleCurrentChange(page) {
       // console.log(this.currentPage, page)
@@ -371,11 +378,13 @@ export default {
       // debugger;
       if (filter.tag) {
         // 为什么这么处理 怕有些同学把undefined当一个字符串传给后台
-        this.station = filter.tag[0] === undefined ? "" : filter.tag[0];
+        this.station = filter.tag;
+        // [0] === undefined ? "" : filter.tag[0];
       }
       if (filter.line) {
         // 为什么这么处理 怕有些同学把undefined当一个字符串传给后台
-        this.line = filter.line[0] === undefined ? "" : filter.line[0];
+        this.line = filter.line;
+        // [0] === undefined ? "" : filter.line[0];
       }
       this.fetchData();
     },
