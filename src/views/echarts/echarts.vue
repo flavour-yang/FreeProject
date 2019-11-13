@@ -28,6 +28,9 @@
         </el-aside>
         <el-container>
           <el-main>
+            不同asin指标对比
+            同一asmin指标对比
+            不同asin不同指标对比
             <div class="echart-content">
               <!-- 柱 -->
               <div id="sales" />
@@ -38,7 +41,7 @@
               <!-- 柱 -->
               <div id="session" />
               <!-- 柱 -->
-              <div id="spend" />
+              <div id="AD_spend" />
               <!-- 柱 -->
               <div id="AD_order" />
               <!-- 折线 -->
@@ -46,10 +49,11 @@
               <!-- 柱 -->
               <div id="AD_sales" />
               <!-- 折线 -->
-              <div id="AD_acos" />
+              <!-- <div id="AD_acos" /> -->
 
               <div id="echart" class="echarts" />
               <div id="echart1" class="echarts" />
+              <div v-for="(item, index) in echartList" :key="index" class="echart-content" />
             </div>
           </el-main>
         </el-container>
@@ -137,6 +141,7 @@ export default {
     if (asin) {
       this._getRecent(asin);
     }
+    console.time("charts");
     this._getCharts(asin);
     //     refundRate: 0 //最近三十天退货率
     // sales: 151 // 销售额
@@ -150,22 +155,28 @@ export default {
   },
   methods: {
     resizeChart() {
-      this.myChart.resize({
-        width: "auto",
-        height: "auto"
-      });
+      // this.myChart.resize({
+      //   width: "auto",
+      //   height: "auto"
+      // });
     },
-    initEchart(value) {
+    initEchart(options, index) {
       // xData = xData || [];
       // yData = yData || [];
       // yData.forEach(item => {
       //   item.type = "bar";
       // });
-      this.myChart = echarts.init(document.getElementById("echart"), "light");
+      const echartsList = document.querySelectorAll('.echart-content');
+      const echart = echarts.init(echartsList[index], 'light')
+      // for (let i = 0; i < echartsList.length; i++) {
+      //   echarts.init(echartsList[0], "light");
+      // this.echarts
+      // }
+      // this.myChart = echarts.init(document.getElementById("echart"), "light");
       // 绘制图表
-      this.myChart.setOption({
+      echart.setOption({
         title: {
-          text: value[2][0],
+          text: options.name,
           left: 10,
           top: 10,
           textStyle: {
@@ -174,7 +185,22 @@ export default {
           }
         },
         tooltip: {
-          trigger: "axis"
+          trigger: "axis",
+          axisPointer: {
+            type: "cross",
+            animation: false,
+            label: {
+              backgroundColor: "#ccc",
+              borderColor: "#aaa",
+              borderWidth: 1,
+              shadowBlur: 0,
+              shadowOffsetX: 0,
+              shadowOffsetY: 0,
+              textStyle: {
+                color: "#222"
+              }
+            }
+          }
         },
         legend: {
           top: "4%",
@@ -223,7 +249,7 @@ export default {
           {
             type: "category",
             boundaryGap: true, // 刻度显示
-            data: value[0][0] // x轴值
+            data: options.xValue // x轴值
           }
         ],
         yAxis: [
@@ -237,90 +263,91 @@ export default {
             name: "数量"
           }
         ],
-        series: [
-          {
-            name: "总数",
-            type: "line",
-            stack: "总量",
-            symbolSize: 10,
-            symbol: "circle",
-            itemStyle: {
-              normal: {
-                color: "rgba(252,230,48,1)",
-                barBorderRadius: 0,
-                label: {
-                  // show: true,
-                  position: "top"
-                  // formatter: function(p) {
-                  //   return p.value > 0 ? p.value : ''
-                  // }
-                }
-              }
-            },
-            data: value[1][0]
-          },
-          {
-            name: "order",
-            type: "bar",
-            stack: "order",
-            barMaxWidth: 35,
-            barGap: "10%",
-            itemStyle: {
-              normal: {
-                color: "rgba(255,144,128,1)",
-                label: {
-                  show: true,
-                  textStyle: {
-                    color: "#fff"
-                  },
-                  position: "insideTop",
-                  formatter: function(p) {
-                    return p.value > 0 ? p.value : "";
-                  }
-                }
-              }
-            }
-          },
+        series: options.series,
+        //  [
+        //   {
+        //     name: "总数",
+        //     type: "line",
+        //     stack: "总量",
+        //     symbolSize: 10,
+        //     symbol: "circle",
+        //     itemStyle: {
+        //       normal: {
+        //         color: "rgba(252,230,48,1)",
+        //         barBorderRadius: 0,
+        //         label: {
+        //           // show: true,
+        //           position: "top"
+        //           // formatter: function(p) {
+        //           //   return p.value > 0 ? p.value : ''
+        //           // }
+        //         }
+        //       }
+        //     },
+        //     data: value[1][0]
+        //   },
+        //   {
+        //     name: "order",
+        //     type: "bar",
+        //     stack: "order",
+        //     barMaxWidth: 35,
+        //     barGap: "10%",
+        //     itemStyle: {
+        //       normal: {
+        //         color: "rgba(255,144,128,1)",
+        //         label: {
+        //           show: true,
+        //           textStyle: {
+        //             color: "#fff"
+        //           },
+        //           position: "insideTop",
+        //           formatter: function(p) {
+        //             return p.value > 0 ? p.value : "";
+        //           }
+        //         }
+        //       }
+        //     }
+        //   },
 
-          {
-            name: "order",
-            type: "bar",
-            stack: "ad order",
-            itemStyle: {
-              normal: {
-                color: "rgba(0,191,183,1)",
-                barBorderRadius: 0,
-                label: {
-                  show: true,
-                  position: "top",
-                  formatter: function(p) {
-                    return p.value > 0 ? p.value : "";
-                  }
-                }
-              }
-            },
-            data: value[1][1]
-          },
-          {
-            name: "order",
-            type: "bar",
-            stack: "natural order",
-            itemStyle: {
-              normal: {
-                color: "rgba(200,191,2,1)",
-                barBorderRadius: 0,
-                label: {
-                  show: true,
-                  position: "top",
-                  formatter: function(p) {
-                    return p.value > 0 ? p.value : "";
-                  }
-                }
-              }
-            },
-            data: value[1][2]
-          }
-        ],
+        //   {
+        //     name: "order",
+        //     type: "bar",
+        //     stack: "ad order",
+        //     itemStyle: {
+        //       normal: {
+        //         color: "rgba(0,191,183,1)",
+        //         barBorderRadius: 0,
+        //         label: {
+        //           show: true,
+        //           position: "top",
+        //           formatter: function(p) {
+        //             return p.value > 0 ? p.value : "";
+        //           }
+        //         }
+        //       }
+        //     },
+        //     data: value[1][1]
+        //   },
+        //   {
+        //     name: "order",
+        //     type: "bar",
+        //     stack: "natural order",
+        //     itemStyle: {
+        //       normal: {
+        //         color: "rgba(200,191,2,1)",
+        //         barBorderRadius: 0,
+        //         label: {
+        //           show: true,
+        //           position: "top",
+        //           formatter: function(p) {
+        //             return p.value > 0 ? p.value : "";
+        //           }
+        //         }
+        //       }
+        //     },
+        //     data: value[1][2]
+        //   }
+        // ],
         calculable: false
       });
       window.addEventListener("resize", this.resizeChart);
@@ -399,31 +426,80 @@ export default {
     },
     _getCharts(value) {
       const params = {
-        indicators: ["Order", "Sales", "StackedBarChart"],
+        indicators: [
+          "Sales",
+          "Order",
+          "UCR",
+          "Session",
+          "AdSpend",
+          "AdClicks",
+          "AdOrder",
+          "AdCR"
+        ],
         startTime: this.startTime,
         endTime: this.endTime,
         asins: [value]
       };
       getCharts(params).then(res => {
-        this.echartList = []
+        console.timeEnd("charts");
+        this.echartList = [];
         const list = res.data;
-        const chartName = [];
         const echartList = [];
-        const xNameList = [];
+        // "LineChart","StackedBarChart","BarChart"
         if (list && list.length) {
+          console.time();
           list.forEach(el => {
-            const arr = [];
-            xNameList.push(el.xNames);
-            chartName.push(el.indicator);
-            el.chartData[0].data.forEach(item => {
-              arr.push(item.values);
+            const obj = {
+              name: "",
+              chartType: "",
+              xValue: [],
+              yValue: [],
+              yName: [],
+              series: []
+            };
+            // const arr = [];
+            obj.xValue.push(el.xNames);
+            obj.name = el.indicator;
+            obj.chartType = el.chartData[0].chartType;
+            el.chartData[0].data.forEach((item, index) => {
+              const serie = {
+                name: obj.name,
+                data: [],
+                type: "bar",
+                stack: "总数",
+                barWidth: 10
+              };
+              if (obj.chartType === "StackedBarChart") {
+                serie.type = "bar";
+              }
+              if (obj.chartType === "LineChart") {
+                serie.type = "line";
+              }
+              if (obj.chartType === "BarChart") {
+                serie.type = "bar";
+              }
+              if (obj.chartType === "StackedBarChart" && index === 0) {
+                serie.type = "line";
+              }
+              serie.data = item.values;
+              obj.series.push(serie);
+              obj.yValue.push(item.values);
+              obj.yName.push(item.yName);
             });
-            echartList.push(arr);
+            echartList.push(obj);
           });
-          this.echartList.push(xNameList);
-          this.echartList.push(echartList);
-          this.echartList.push(chartName);
-          this.initEchart(this.echartList);
+          console.timeEnd();
+          this.echartList = echartList;
+          setTimeout(() => {
+            echartList.forEach((item, index) => {
+              this.initEchart(item, index);
+            });
+          }, 20);
+
+          // this.echartList.push(xNameList);
+          // this.echartList.push(echartList);
+          // this.echartList.push(chartName);
+          // this.initEchart(this.echartList);
         }
         // console.log(echartList, xNameList);
         console.log(this.echartList);
