@@ -1,71 +1,100 @@
 <template>
   <div class="content">
     <el-container>
-      <el-header>
-        <div>
-          select time
-          <el-date-picker
-            v-model="pickerData"
-            type="monthrange"
-            range-separator="至"
-            start-placeholder="开始月份"
-            end-placeholder="结束月份"
-            value-format="yyyy-MM-d"
-          />
-        </div>
-      </el-header>
+      <el-aside width="350px">
+        <el-card class="box-card" style="margin: 10px">
+          <div slot="header" class="clearfix">
+            <!-- <span>近三十天数据</span> -->
+            <p>
+              <span style="font-weight: bold;">ASIN:</span>
+              <span>{{ asin }}</span>
+            </p>
+            <el-divider />
+            <div>
+              <span style="font-weight: bold;">Parent ASIN:</span>
+              <span v-for="(item, index) in parentAsinList" :key="index">{{ item }}</span>
+            </div>
+          </div>
+          <div class="card-info">
+            <p>
+              近30天售量:
+              <span>{{ recentData.unitsOrders }}</span>
+            </p>
+            <p>
+              近30天UCR:
+              <span>{{ recentData.ucr }}</span>
+            </p>
+            <p>
+              近30天退货率:
+              <span>{{ recentData.refundRate }}</span>
+            </p>
+            <p>
+              近30天销售额:
+              <span>{{ recentData.sales }}</span>
+            </p>
+            <p>
+              近30天花费:
+              <span>{{ recentData.spends }}</span>
+            </p>
+          </div>
+        </el-card>
+      </el-aside>
       <el-container>
-        <el-aside width="200px">
-          <el-card class="box-card">
-            <div slot="header" class="clearfix">
-              <span>近三十天数据</span>
+        <el-header height="120px">
+          <div class="header-cascader" style>
+            <div class="block">
+              <span class="demonstration">同一asin指标对比</span>
+              <el-cascader :options="options" :props="{ multiple: true}" collapse-tags clearable />
             </div>
-            <p>退货率: {{ recentData.refundRate }}</p>
-            <p>销售额: {{ recentData.sales }}</p>
-            <p>花费: {{ recentData.spends }}</p>
-            <p>UCR: {{ recentData.ucr }}</p>
-          </el-card>
-        </el-aside>
-        <el-container>
-          <el-main>
-            不同asin指标对比
-            同一asmin指标对比
-            不同asin不同指标对比
-            <div class="echart-content">
-              <!-- 柱 -->
-              <div id="sales" />
-              <!-- 柱 -->
-              <div id="order" />
-              <!-- 折线 -->
-              <div id="ucr" />
-              <!-- 柱 -->
-              <div id="session" />
-              <!-- 柱 -->
-              <div id="AD_spend" />
-              <!-- 柱 -->
-              <div id="AD_order" />
-              <!-- 折线 -->
-              <div id="AD_cr" />
-              <!-- 柱 -->
-              <div id="AD_sales" />
-              <!-- 折线 -->
-              <!-- <div id="AD_acos" /> -->
-
-              <div id="echart" class="echarts" />
-              <div id="echart1" class="echarts" />
-              <div v-for="(item, index) in echartList" :key="index" class="echart-content" />
+            <div class="block">
+              <span class="demonstration">不同asin指标对比</span>
+              <el-cascader :options="options" :props="{ multiple: true}" collapse-tags clearable />
             </div>
-          </el-main>
-        </el-container>
+            <div class="block">
+              <span class="demonstration">不同asin不同指标对比</span>
+              <el-cascader :options="options" :props="{ multiple: true}" collapse-tags clearable />
+            </div>
+          </div>
+        </el-header>
+        <el-main>
+          <!-- 柱 -->
+          <div id="sales" />
+          <!-- 柱 -->
+          <div id="order" />
+          <!-- 折线 -->
+          <div id="ucr" />
+          <!-- 柱 -->
+          <div id="session" />
+          <!-- 柱 -->
+          <div id="AD_spend" />
+          <!-- 柱 -->
+          <div id="AD_order" />
+          <!-- 折线 -->
+          <div id="AD_cr" />
+          <!-- 柱 -->
+          <div id="AD_sales" />
+          <!-- 折线 -->
+          <!-- <div id="AD_acos" /> -->
+          <div id="echart1" class="echarts" />
+          <div class="echart-list" style>
+            <!-- <div style="overflow: auto;"> -->
+            <div v-for="(item, index) in echartList" :key="index" class="echart-content" @click="handleEchart" />
+            <!-- </div> -->
+          </div>
+        </el-main>
       </el-container>
     </el-container>
     <div />
+    <el-dialog title="提示" :visible.sync="dialogVisible" width="50%">
+      <span>这是一段信息</span>
+      <!-- <div id="echart" class="echarts" /> -->
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import echarts from "echarts";
-import { getRecent, getCharts } from "@/api/table";
+import { getRecent, getCharts, getParentASIN } from "@/api/table";
 export default {
   data() {
     return {
@@ -104,13 +133,26 @@ export default {
           }
         ]
       },
+      dialogVisible: false,
       now: +new Date(1997, 9, 3),
       oneDay: 24 * 3600 * 1000,
       value: Math.random() * 1000,
-      data1: [],
       recentData: [],
-      startTime: "2019-11-1",
-      endTime: "2019-11-12"
+      startTime: "",
+      endTime: "",
+      domEchart: null,
+      parentAsinList: [],
+      asin: "",
+      options: [
+        { value: "Sales", label: "Sales" },
+        { value: "Order", label: "Order" },
+        { value: "UCR", label: "UCR" },
+        { value: "Session", label: "Session" },
+        { value: "AdSpend", label: "AdSpend" },
+        { value: "AdClicks", label: "AdClicks" },
+        { value: "AdOrder", label: "AdOrder" },
+        { value: "AdCR", label: "AdCR" }
+      ]
     };
   },
   watch: {
@@ -127,22 +169,23 @@ export default {
     }
   },
   mounted() {
-    // for (var i = 1; i < 13; i++) {
-    //   this.dateList.push(i + '月份')
-    // }
-    this.dateList = ["一月", "二月", "三月"];
-    for (var j = 0; j < 1000; j++) {
-      this.data1.push(this.randomData());
-    }
+    const start = new Date();
+    const end = new Date(start.getTime() - 3600 * 1000 * 24 * 30);
+    this.endTime = `${start.getFullYear()}-${start.getMonth() +
+      1}-${start.getDate()}`;
+    this.startTime = `${end.getFullYear()}-${end.getMonth() +
+      1}-${end.getDate()}`;
     // this.initEchart();
     // this.initLineChart();
     const asin = this.$route.query.asin;
+    this.asin = asin;
     // debugger
     if (asin) {
       this._getRecent(asin);
     }
     console.time("charts");
     this._getCharts(asin);
+    this._getParentASIN(asin);
     //     refundRate: 0 //最近三十天退货率
     // sales: 151 // 销售额
     // spends: 0 //30天花费
@@ -160,14 +203,11 @@ export default {
       //   height: "auto"
       // });
     },
+    handleEchart() {
+      this.dialogVisible = true
+    },
     initEchart(options, index) {
-      // xData = xData || [];
-      // yData = yData || [];
-      // yData.forEach(item => {
-      //   item.type = "bar";
-      // });
-      const echartsList = document.querySelectorAll('.echart-content');
-      const echart = echarts.init(echartsList[index], 'light')
+      const echart = echarts.init(this.domEchart[index], "light");
       // for (let i = 0; i < echartsList.length; i++) {
       //   echarts.init(echartsList[0], "light");
       // this.echarts
@@ -190,49 +230,49 @@ export default {
             type: "cross",
             animation: false,
             label: {
-              backgroundColor: "#ccc",
-              borderColor: "#aaa",
+              backgroundColor: "#409EFF",
+              borderColor: "#fff",
               borderWidth: 1,
               shadowBlur: 0,
               shadowOffsetX: 0,
               shadowOffsetY: 0,
               textStyle: {
-                color: "#222"
+                color: "#fff"
               }
             }
           }
         },
         legend: {
-          top: "4%",
-          data: ["order", "ad order", "natural order"]
+          top: "15%",
+          data: options.yName
         },
         grid: {
           bottom: "10%",
-          top: "20%",
-          left: "4%",
+          top: "30%",
+          left: "10%",
           right: "4%"
         },
-        toolbox: {
-          show: true,
-          feature: {
-            dataZoom: {
-              yAxisIndex: "none"
-            },
-            mark: {
-              show: true
-            },
-            magicType: {
-              show: true,
-              type: ["line", "bar"]
-            },
-            restore: {
-              show: true
-            },
-            saveAsImage: {
-              show: true
-            }
-          }
-        },
+        // toolbox: {
+        //   show: true,
+        //   feature: {
+        //     dataZoom: {
+        //       yAxisIndex: "none"
+        //     },
+        //     mark: {
+        //       show: true
+        //     },
+        //     magicType: {
+        //       show: true,
+        //       type: ["line", "bar"]
+        //     },
+        //     restore: {
+        //       show: true
+        //     },
+        //     saveAsImage: {
+        //       show: true
+        //     }
+        //   }
+        // },
         // dataZoom: [
         //   {
         //     show: true,
@@ -259,95 +299,11 @@ export default {
                 type: "dashed"
               }
             },
-            type: "value",
-            name: "数量"
+            type: "value"
+            // name: ""
           }
         ],
         series: options.series,
-        //  [
-        //   {
-        //     name: "总数",
-        //     type: "line",
-        //     stack: "总量",
-        //     symbolSize: 10,
-        //     symbol: "circle",
-        //     itemStyle: {
-        //       normal: {
-        //         color: "rgba(252,230,48,1)",
-        //         barBorderRadius: 0,
-        //         label: {
-        //           // show: true,
-        //           position: "top"
-        //           // formatter: function(p) {
-        //           //   return p.value > 0 ? p.value : ''
-        //           // }
-        //         }
-        //       }
-        //     },
-        //     data: value[1][0]
-        //   },
-        //   {
-        //     name: "order",
-        //     type: "bar",
-        //     stack: "order",
-        //     barMaxWidth: 35,
-        //     barGap: "10%",
-        //     itemStyle: {
-        //       normal: {
-        //         color: "rgba(255,144,128,1)",
-        //         label: {
-        //           show: true,
-        //           textStyle: {
-        //             color: "#fff"
-        //           },
-        //           position: "insideTop",
-        //           formatter: function(p) {
-        //             return p.value > 0 ? p.value : "";
-        //           }
-        //         }
-        //       }
-        //     }
-        //   },
-
-        //   {
-        //     name: "order",
-        //     type: "bar",
-        //     stack: "ad order",
-        //     itemStyle: {
-        //       normal: {
-        //         color: "rgba(0,191,183,1)",
-        //         barBorderRadius: 0,
-        //         label: {
-        //           show: true,
-        //           position: "top",
-        //           formatter: function(p) {
-        //             return p.value > 0 ? p.value : "";
-        //           }
-        //         }
-        //       }
-        //     },
-        //     data: value[1][1]
-        //   },
-        //   {
-        //     name: "order",
-        //     type: "bar",
-        //     stack: "natural order",
-        //     itemStyle: {
-        //       normal: {
-        //         color: "rgba(200,191,2,1)",
-        //         barBorderRadius: 0,
-        //         label: {
-        //           show: true,
-        //           position: "top",
-        //           formatter: function(p) {
-        //             return p.value > 0 ? p.value : "";
-        //           }
-        //         }
-        //       }
-        //     },
-        //     data: value[1][2]
-        //   }
-        // ],
         calculable: false
       });
       window.addEventListener("resize", this.resizeChart);
@@ -386,7 +342,8 @@ export default {
         },
         yAxis: {
           type: "value",
-          boundaryGap: [0, "100%"],
+          boundaryGap: ["10%", "20%"],
+          offset: 100,
           splitLine: {
             show: false
           }
@@ -458,12 +415,12 @@ export default {
               series: []
             };
             // const arr = [];
-            obj.xValue.push(el.xNames);
+            obj.xValue = el.xNames;
             obj.name = el.indicator;
             obj.chartType = el.chartData[0].chartType;
             el.chartData[0].data.forEach((item, index) => {
               const serie = {
-                name: obj.name,
+                name: item.yName,
                 data: [],
                 type: "bar",
                 stack: "总数",
@@ -491,19 +448,19 @@ export default {
           console.timeEnd();
           this.echartList = echartList;
           setTimeout(() => {
+            this.domEchart = document.querySelectorAll(".echart-content");
+            console.log(this.domEchart);
             echartList.forEach((item, index) => {
               this.initEchart(item, index);
             });
           }, 20);
-
-          // this.echartList.push(xNameList);
-          // this.echartList.push(echartList);
-          // this.echartList.push(chartName);
-          // this.initEchart(this.echartList);
         }
-        // console.log(echartList, xNameList);
         console.log(this.echartList);
-        // debugger;
+      });
+    },
+    _getParentASIN(value) {
+      getParentASIN({ childASIN: value }).then(res => {
+        this.parentAsinList = res.data;
       });
     }
   }
@@ -512,18 +469,55 @@ export default {
 // Y轴: [[5,10,4],[1,3,2],[3,4,1],[1,3,1]]
 </script>
 <style lang="scss" scoped>
+@import "../../styles/variables";
 .content {
   width: 100%;
   height: calc(100vh - 50px);
+  .card-info {
+    color: $menuActiveText;
+    > p {
+      display: flex;
+      justify-content: space-between;
+    }
+  }
+  .header-cascader {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    height: 100%;
+    .block {
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      .demonstration {
+        margin-bottom: 10px;
+      }
+    }
+  }
 }
-.echart-content {
-  padding: 10px;
+.echart-list {
+  display: flex;
+  justify-content: center;
   width: 100%;
-  height: 100%;
-  .echarts {
-    margin-left: 10px;
-    width: 600px;
-    height: 400px;
+  height: calc(100vh - 150px);
+  overflow: auto;
+  flex-wrap: wrap;
+  .echart-content {
+    border-radius: 5px;
+    width: 310px;
+    height: 260px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin: 10px;
+    transition: all 0.3s;
+    &:hover {
+      box-shadow: 0 20px 20px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s;
+    }
+    .echarts {
+      margin-left: 10px;
+      width: 600px;
+      height: 400px;
+    }
   }
 }
 </style>

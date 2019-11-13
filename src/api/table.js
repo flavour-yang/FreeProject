@@ -67,7 +67,7 @@ export function getRecent(params) {
   })
 }
 
-export function getCharts(data) {
+export function getCharts(data) { // 获取图标数据
   return request({
     url: '/api/v1/Product/GetCharts',
     method: 'post',
@@ -75,6 +75,14 @@ export function getCharts(data) {
       'Content-Type': ' application/json; charset=utf-8'
     },
     data
+  })
+}
+
+export function getParentASIN(params) { // 获取图标数据
+  return request({
+    url: '/api/v1/Product/GetPrentASIN',
+    method: 'get',
+    params
   })
 }
 
