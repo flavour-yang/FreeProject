@@ -1,57 +1,67 @@
 <template>
   <div class="content">
-    <div>
-      select time
-      <!-- <el-date-picker
-        v-model="pickerData"
-        type="daterange"
-        align="right"
-        unlink-panels
-        value-format="yyyy-MM-dd"
-        range-separator="至"
-        start-placeholder="开始日期"
-        end-placeholder="结束日期"
-        :picker-options="pickerOptions"
-      />-->
-      <el-date-picker
-        v-model="pickerData"
-        type="monthrange"
-        range-separator="至"
-        start-placeholder="开始月份"
-        end-placeholder="结束月份"
-        value-format="yyyy-M"
-      />
-    </div>
-    <!-- <div v-for="item in echartList"/> -->
-    <div class="echart-content">
-      <!-- 柱 -->
-      <div id="sales" />
-      <!-- 柱 -->
-      <div id="order" />
-      <!-- 折线 -->
-      <div id="ucr" />
-      <!-- 柱 -->
-      <div id="session" />
-      <!-- 柱 -->
-      <div id="spend" />
-      <!-- 柱 -->
-      <div id="AD_order" />
-      <!-- 折线 -->
-      <div id="AD_cr" />
-      <!-- 柱 -->
-      <div id="AD_sales" />
-      <!-- 折线 -->
-      <div id="AD_acos" />
+    <el-container>
+      <el-header>
+        <div>
+          select time
+          <el-date-picker
+            v-model="pickerData"
+            type="monthrange"
+            range-separator="至"
+            start-placeholder="开始月份"
+            end-placeholder="结束月份"
+            value-format="yyyy-MM-d"
+          />
+        </div>
+      </el-header>
+      <el-container>
+        <el-aside width="200px">
+          <el-card class="box-card">
+            <div slot="header" class="clearfix">
+              <span>近三十天数据</span>
+            </div>
+            <p>退货率: {{ recentData.refundRate }}</p>
+            <p>销售额: {{ recentData.sales }}</p>
+            <p>花费: {{ recentData.spends }}</p>
+            <p>UCR: {{ recentData.ucr }}</p>
+          </el-card>
+        </el-aside>
+        <el-container>
+          <el-main>
+            <div class="echart-content">
+              <!-- 柱 -->
+              <div id="sales" />
+              <!-- 柱 -->
+              <div id="order" />
+              <!-- 折线 -->
+              <div id="ucr" />
+              <!-- 柱 -->
+              <div id="session" />
+              <!-- 柱 -->
+              <div id="spend" />
+              <!-- 柱 -->
+              <div id="AD_order" />
+              <!-- 折线 -->
+              <div id="AD_cr" />
+              <!-- 柱 -->
+              <div id="AD_sales" />
+              <!-- 折线 -->
+              <div id="AD_acos" />
 
-      <div id="echart" class="echarts" />
-      <div id="echart1" class="echarts" />
-    </div>
+              <div id="echart" class="echarts" />
+              <div id="echart1" class="echarts" />
+            </div>
+          </el-main>
+        </el-container>
+      </el-container>
+    </el-container>
+    <div />
   </div>
 </template>
 
 <script>
 import echarts from "echarts";
-import { getRecent } from "@/api/table";
+import { getRecent, getCharts } from "@/api/table";
 export default {
   data() {
     return {
@@ -93,17 +103,23 @@ export default {
       now: +new Date(1997, 9, 3),
       oneDay: 24 * 3600 * 1000,
       value: Math.random() * 1000,
-      data1: []
+      data1: [],
+      recentData: [],
+      startTime: "2019-11-1",
+      endTime: "2019-11-12"
     };
   },
   watch: {
     pickerData(val) {
-      const time = val[1].split("-")[1] - val[0].split("-")[1];
-      this.dateList = [];
-      for (let i = val[0].split("-")[1]; i <= time + 1; i++) {
-        this.dateList.push(i + "月份");
-      }
-      this.initEchart();
+      this.startTime = val[0];
+      this.endTime = val[1];
+      this._getCharts(this.$route.query.asin);
+      // const time = val[1].split("-")[1] - val[0].split("-")[1];
+      // this.dateList = [];
+      // for (let i = val[0].split("-")[1]; i <= time + 1; i++) {
+      //   this.dateList.push(i + "月份");
+      // }
+      // this.initEchart();
     }
   },
   mounted() {
@@ -114,13 +130,14 @@ export default {
     for (var j = 0; j < 1000; j++) {
       this.data1.push(this.randomData());
     }
-    this.initEchart();
-    this.initLineChart();
+    // this.initEchart();
+    // this.initLineChart();
     const asin = this.$route.query.asin;
     // debugger
     if (asin) {
       this._getRecent(asin);
     }
+    this._getCharts(asin);
     //     refundRate: 0 //最近三十天退货率
     // sales: 151 // 销售额
     // spends: 0 //30天花费
@@ -138,7 +155,7 @@ export default {
         height: "auto"
       });
     },
-    initEchart() {
+    initEchart(value) {
       // xData = xData || [];
       // yData = yData || [];
       // yData.forEach(item => {
@@ -148,7 +165,7 @@ export default {
       // 绘制图表
       this.myChart.setOption({
         title: {
-          text: "统计测试",
+          text: value[2][0],
           left: 10,
           top: 10,
           textStyle: {
@@ -161,7 +178,7 @@ export default {
         },
         legend: {
           top: "4%",
-          data: ["男", "女", "总数"]
+          data: ["order", "ad order", "natural order"]
         },
         grid: {
           bottom: "10%",
@@ -206,7 +223,7 @@ export default {
           {
             type: "category",
             boundaryGap: true, // 刻度显示
-            data: this.dateList // x轴值
+            data: value[0][0] // x轴值
           }
         ],
         yAxis: [
@@ -240,26 +257,12 @@ export default {
                 }
               }
             },
-            data: [5, 10, 4]
-            // data: [
-            //   1036,
-            //   3693,
-            //   2962,
-            //   3810,
-            //   2519,
-            //   1915,
-            //   1748,
-            //   4675,
-            //   6209,
-            //   4323,
-            //   2865,
-            //   4298
-            // ]
+            data: value[1][0]
           },
           {
-            name: "A",
+            name: "order",
             type: "bar",
-            stack: "总量",
+            stack: "order",
             barMaxWidth: 35,
             barGap: "10%",
             itemStyle: {
@@ -276,28 +279,13 @@ export default {
                   }
                 }
               }
-            },
-            data: [1, 3, 2]
-            // data: [
-            //   709,
-            //   1917,
-            //   2455,
-            //   2610,
-            //   1719,
-            //   1433,
-            //   1544,
-            //   3285,
-            //   5208,
-            //   3372,
-            //   2484,
-            //   4078
-            // ]
+            }
           },
 
           {
-            name: "B",
+            name: "order",
             type: "bar",
-            stack: "总量",
+            stack: "ad order",
             itemStyle: {
               normal: {
                 color: "rgba(0,191,183,1)",
@@ -311,26 +299,12 @@ export default {
                 }
               }
             },
-            data: [3, 4, 1]
-            // data: [
-            //   327,
-            //   1776,
-            //   507,
-            //   1200,
-            //   800,
-            //   482,
-            //   204,
-            //   1390,
-            //   1001,
-            //   951,
-            //   381,
-            //   220
-            // ]
+            data: value[1][1]
           },
           {
-            name: "C",
+            name: "order",
             type: "bar",
-            stack: "总量",
+            stack: "natural order",
             itemStyle: {
               normal: {
                 color: "rgba(200,191,2,1)",
@@ -344,21 +318,7 @@ export default {
                 }
               }
             },
-            data: [1, 3, 1]
-            // data: [
-            //   327,
-            //   1776,
-            //   507,
-            //   1200,
-            //   800,
-            //   482,
-            //   204,
-            //   1390,
-            //   1001,
-            //   951,
-            //   381,
-            //   220
-            // ]
+            data: value[1][2]
           }
         ],
         calculable: false
@@ -433,6 +393,40 @@ export default {
     },
     _getRecent(value) {
       getRecent({ asin: value }).then(res => {
+        this.recentData = res.data;
+        // debugger;
+      });
+    },
+    _getCharts(value) {
+      const params = {
+        indicators: ["Order", "Sales", "StackedBarChart"],
+        startTime: this.startTime,
+        endTime: this.endTime,
+        asins: [value]
+      };
+      getCharts(params).then(res => {
+        this.echartList = []
+        const list = res.data;
+        const chartName = [];
+        const echartList = [];
+        const xNameList = [];
+        if (list && list.length) {
+          list.forEach(el => {
+            const arr = [];
+            xNameList.push(el.xNames);
+            chartName.push(el.indicator);
+            el.chartData[0].data.forEach(item => {
+              arr.push(item.values);
+            });
+            echartList.push(arr);
+          });
+          this.echartList.push(xNameList);
+          this.echartList.push(echartList);
+          this.echartList.push(chartName);
+          this.initEchart(this.echartList);
+        }
+        // console.log(echartList, xNameList);
+        console.log(this.echartList);
         // debugger;
       });
     }

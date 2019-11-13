@@ -43,12 +43,12 @@
           :on-error="handleError"
           :before-upload="beforeUpload"
           :file-list="fileList"
-          :disabled="excelValue && stationValue"
+          :disabled="(excelValue && stationValue) ? false : true"
           :show-file-list="false"
         >
           <el-button
             slot="trigger"
-            :disabled="excelValue && stationValue"
+            :disabled="(excelValue && stationValue) ? false : true"
             size="small"
             type="primary"
           >上传产品</el-button>
@@ -158,7 +158,7 @@
       </el-table-column>-->
       <el-table-column label="ASIN" align="center">
         <template slot-scope="scope">
-          <span @click="handleAsin(scope.row.asin)">{{ scope.row.asin }}</span>
+          <span style="cursor: pointer;" @click="handleAsin(scope.row.asin)">{{ scope.row.asin }}</span>
         </template>
       </el-table-column>
       <el-table-column label="SKU" align="center">
@@ -229,6 +229,7 @@ export default {
       showStationFilter: true,
       station: "",
       line: "",
+      upLoadDisabled: false,
       linesList: []
     };
   },
@@ -248,6 +249,7 @@ export default {
       return arr;
     }
   },
+  watch: {},
   created() {
     this.listLoading = true;
     this.list = [];

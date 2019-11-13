@@ -58,12 +58,23 @@ export function getLines(params) {
     params
   })
 }
-
+// 获取最近三十天数据
 export function getRecent(params) {
   return request({
     url: '/api/v1/Product/GetRecentData',
     method: 'get',
     params
+  })
+}
+
+export function getCharts(data) {
+  return request({
+    url: '/api/v1/Product/GetCharts',
+    method: 'post',
+    headers: {
+      'Content-Type': ' application/json; charset=utf-8'
+    },
+    data
   })
 }
 
