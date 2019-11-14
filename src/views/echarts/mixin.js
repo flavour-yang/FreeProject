@@ -1,4 +1,5 @@
 import { getCharts } from "@/api/table";
+import echarts from "echarts";
 export default {
   data() {
     return {
@@ -6,6 +7,108 @@ export default {
     }
   },
   methods: {
+    initOneEchart(options, dom) {
+      const echart = echarts.init(dom, "light");
+      // this.myChart = echarts.init(document.getElementById("echart"), "light");
+      // 绘制图表
+      echart.setOption({
+        title: {
+          text: options.name,
+          left: '8%',
+          top: "10%",
+          textStyle: {
+            fontSize: 14,
+            fontWeight: 400
+          }
+        },
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "cross",
+            animation: false,
+            label: {
+              backgroundColor: "#409EFF",
+              borderColor: "#fff",
+              borderWidth: 1,
+              shadowBlur: 0,
+              shadowOffsetX: 0,
+              shadowOffsetY: 0,
+              textStyle: {
+                color: "#fff"
+              }
+            }
+          }
+        },
+        legend: {
+          top: "10%",
+          data: options.yName
+        },
+        grid: {
+          // 图标位置调整
+          bottom: "10%",
+          top: "20%",
+          left: "10%",
+          right: "4%"
+        },
+        toolbox: {
+          show: true,
+          right: '5%',
+          top: '8%',
+          feature: {
+            dataZoom: {
+              yAxisIndex: "none"
+            },
+            mark: {
+              show: true
+            },
+            // magicType: {
+            //   show: true,
+            //   type: ["line", "bar"]
+            // },
+            restore: {
+              show: true
+            },
+            saveAsImage: {
+              show: true
+            }
+          }
+        },
+        // dataZoom: [
+        //   {
+        //     show: true,
+        //     realtime: true,
+        //     y: 50,
+        //     height: 16,
+        //     start: 0,
+        //     end: 100,
+        //     left: "10%",
+        //     width: "80%"
+        //   }
+        // ],
+        xAxis: [
+          {
+            type: "category",
+            boundaryGap: true, // 刻度显示
+            data: options.xValue // x轴值
+          }
+        ],
+        yAxis: [
+          {
+            splitLine: {
+              lineStyle: {
+                type: "dashed"
+              }
+            },
+            type: "value"
+            // name: ""
+          }
+        ],
+        series: options.series,
+        calculable: false
+      }, {
+        notMerge: true // 是否合并之前的图表
+      });
+    },
     _getOneCharts(indicators, asin, dom) {
       //   debugger
       const start = this.pickerData[0] || this.startTime; const end = this.pickerData[1] || this.endTime
@@ -64,7 +167,7 @@ export default {
           console.timeEnd();
           setTimeout(() => {
             echartList.forEach((item) => {
-              this.initEchart(item, dom);
+              this.initOneEchart(item, dom);
             });
           }, 20);
         }

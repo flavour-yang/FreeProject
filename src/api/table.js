@@ -78,9 +78,33 @@ export function getCharts(data) { // 获取图标数据
   })
 }
 
-export function getParentASIN(params) { // 获取图标数据
+export function getParentASIN(params) { // 获取父asin
   return request({
     url: '/api/v1/Product/GetPrentASIN',
+    method: 'get',
+    params
+  })
+}
+
+export function geRma(params) { // 获取rma
+  return request({
+    url: '/api/v1/Product/GetRmas',
+    method: 'get',
+    params
+  })
+}
+
+export function getKeywordRankReport(params) { // //获取Keyword报表
+  return request({
+    url: '/api/v1/Product/GetKeywordRankReport',
+    method: 'get',
+    params
+  })
+}
+
+export function getKeywordChart(params) { // //获取keyword图表
+  return request({
+    url: '/api/v1/Product/GetKeywordChart ',
     method: 'get',
     params
   })

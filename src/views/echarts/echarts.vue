@@ -1,7 +1,7 @@
 <template>
   <div class="content">
     <el-container>
-      <el-aside width="350px">
+      <el-aside width="320px">
         <el-card class="box-card" style="margin: 10px">
           <div slot="header" class="clearfix">
             <!-- <span>近三十天数据</span> -->
@@ -12,7 +12,12 @@
             <el-divider />
             <div>
               <span style="font-weight: bold;">Parent ASIN:</span>
-              <span v-for="(item, index) in parentAsinList" :key="index">{{ item }}</span>
+              <span
+                v-for="(item, index) in parentAsinList"
+                :key="index"
+                class="asin-parent"
+                @click="chooseParentAsin(item)"
+              >{{ item }}</span>
             </div>
           </div>
           <div class="card-info">
@@ -96,7 +101,7 @@
               v-for="(item, index) in echartList"
               :key="index"
               class="echart-content"
-              @click="handleEchart(item)"
+              @click.capture.stop="handleEchart(item,$event)"
             />
             <!-- </div> -->
           </div>
@@ -106,14 +111,16 @@
     <div />
     <el-dialog :title="oneEchartName[0]" :visible.sync="dialogVisible" width="60%">
       <!-- <span>这是一段信息</span> -->
-      <el-date-picker
-        v-model="pickerData"
-        value-format="yyyy-MM-dd"
-        type="daterange"
-        range-separator="至"
-        start-placeholder="开始日期"
-        end-placeholder="结束日期"
-      />
+      <div class="block" style="margin:0 auto 10px; width:80%;">
+        <el-date-picker
+          v-model="pickerData"
+          value-format="yyyy-MM-dd"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        />
+      </div>
       <div id="echart" class="echarts-scals" />
     </el-dialog>
     <el-dialog title="对比" :visible.sync="dialogComparison" width="60%">
@@ -148,7 +155,14 @@
 
 <script>
 import echarts from "echarts";
-import { getRecent, getCharts, getParentASIN } from "@/api/table";
+import {
+  getRecent,
+  getCharts,
+  getParentASIN,
+  geRma,
+  getKeywordRankReport,
+  getKeywordChart
+} from "@/api/table";
 import mixin from "./mixin.js";
 
 export default {
@@ -228,15 +242,21 @@ export default {
   },
   watch: {
     pickerData(val) {
-      this._getOneCharts(this.oneEchartName, [this.asin]);
+      const dom = document.getElementById("echart");
+      this._getOneCharts(this.oneEchartName, [this.asin], dom);
     },
     dialogVisible(val) {
       if (!val) {
         this.pickerData = "";
       }
+    },
+    pickerDataSameAsin(val) {
+      this.handleSameAsin();
     }
   },
   mounted() {
+    console.time("charts");
+
     const start = new Date();
     const end = new Date(start.getTime() - 3600 * 1000 * 24 * 30);
     this.endTime = `${start.getFullYear()}-${start.getMonth() +
@@ -247,12 +267,11 @@ export default {
     const asin = this.$route.query.asin;
     this.asin = asin;
     // debugger
-    if (asin) {
-      this._getRecent(asin);
-    }
-    console.time("charts");
+
+    this._getRecent(asin);
     this._getCharts(asin);
     this._getParentASIN(asin);
+    this._geRma();
     // refundRate: 0 //最近三十天退货率
     // sales: 151 // 销售额
     // spends: 0 //30天花费
@@ -270,6 +289,13 @@ export default {
       //   height: "auto"
       // });
     },
+    chooseParentAsin(value) {
+      this.asin = value;
+      this._getRecent(value);
+      this._getCharts(value);
+      this._getParentASIN(value);
+      this._geRma();
+    },
     showComparison() {
       this.dialogComparison = true;
     },
@@ -279,7 +305,7 @@ export default {
         // this.sameAsin.forEach(item => {
         //   // debugger
         // })
-        const strArr = this.sameAsin.flat(Infinity)
+        const strArr = this.sameAsin.flat(Infinity);
         // const strArr = this.sameAsin.join('","');
         this._getMoreCharts(strArr, [this.asin], dom);
       }
@@ -289,14 +315,16 @@ export default {
       // }
       // debugger;
     },
-    handleEchart(value) {
+    handleEchart(value, event) {
       this.dialogVisible = true;
       const nameArr = [];
       nameArr.push(value.name);
       this.oneEchartName = nameArr;
-      const dom = document.getElementById("echart");
-
-      this._getOneCharts(nameArr, [this.asin], dom);
+      setTimeout(() => {
+        const dom = document.getElementById("echart");
+        this._getOneCharts(nameArr, [this.asin], dom);
+      }, 20);
+      event.stopPropagation();
     },
     initEchart(options, dom) {
       const echart = echarts.init(dom, "light");
@@ -475,6 +503,31 @@ export default {
       getParentASIN({ childASIN: value }).then(res => {
         this.parentAsinList = res.data;
       });
+    },
+    _geRma() {
+      const params = {
+        StartTime: this.startTime,
+        EndTime: this.endTime,
+        ASIN: this.asin
+      };
+      geRma(params).then(res => {
+        console.log(res);
+      });
+    },
+    _getKeywordRankReport() {
+      const params = {
+        StartTime: "",
+        EndTime: "",
+        ASIN: "",
+        PageIndex: "",
+        PageSize: ""
+      };
+      getKeywordRankReport(params).then(res => {
+        console.log(res);
+      });
+    },
+    _getKeywordChart() {
+      getKeywordChart().then(res => {});
     }
   }
 };
@@ -489,8 +542,16 @@ export default {
   .box-card {
     height: calc(100vh - 150px);
   }
+  .asin-parent {
+    cursor: pointer;
+    &:hover {
+      color: $menuActiveText;
+      text-decoration: underline;
+    }
+  }
   .card-info {
     color: $menuActiveText;
+    font-size: 14px;
     > p {
       display: flex;
       justify-content: space-between;
