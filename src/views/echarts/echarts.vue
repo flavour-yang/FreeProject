@@ -44,16 +44,31 @@
           <div class="header-cascader" style>
             <div class="block">
               <span class="demonstration">同一asin指标对比</span>
-              <el-cascader :options="options" :props="{ multiple: true}" collapse-tags clearable />
+              <div>
+                <el-cascader
+                  v-model="sameAsin"
+                  :options="options"
+                  :props="{ multiple: true}"
+                  collapse-tags
+                  clearable
+                />
+                <el-button type="primary" @click="showComparison">compare</el-button>
+              </div>
             </div>
-            <div class="block">
+            <!-- <div class="block">
               <span class="demonstration">不同asin指标对比</span>
-              <el-cascader :options="options" :props="{ multiple: true}" collapse-tags clearable />
+              <div>
+                <el-cascader :options="options" :props="{ multiple: true}" collapse-tags clearable />
+                <el-button type="primary">compare</el-button>
+              </div>
             </div>
             <div class="block">
               <span class="demonstration">不同asin不同指标对比</span>
-              <el-cascader :options="options" :props="{ multiple: true}" collapse-tags clearable />
-            </div>
+              <div>
+                <el-cascader :options="options" :props="{ multiple: true}" collapse-tags clearable />
+                <el-button type="primary">compare</el-button>
+              </div>
+            </div>-->
           </div>
         </el-header>
         <el-main>
@@ -75,19 +90,58 @@
           <div id="AD_sales" />
           <!-- 折线 -->
           <!-- <div id="AD_acos" /> -->
-          <div id="echart1" class="echarts" />
           <div class="echart-list" style>
             <!-- <div style="overflow: auto;"> -->
-            <div v-for="(item, index) in echartList" :key="index" class="echart-content" @click="handleEchart" />
+            <div
+              v-for="(item, index) in echartList"
+              :key="index"
+              class="echart-content"
+              @click="handleEchart(item)"
+            />
             <!-- </div> -->
           </div>
         </el-main>
       </el-container>
     </el-container>
     <div />
-    <el-dialog title="提示" :visible.sync="dialogVisible" width="50%">
-      <span>这是一段信息</span>
-      <!-- <div id="echart" class="echarts" /> -->
+    <el-dialog :title="oneEchartName[0]" :visible.sync="dialogVisible" width="60%">
+      <!-- <span>这是一段信息</span> -->
+      <el-date-picker
+        v-model="pickerData"
+        value-format="yyyy-MM-dd"
+        type="daterange"
+        range-separator="至"
+        start-placeholder="开始日期"
+        end-placeholder="结束日期"
+      />
+      <div id="echart" class="echarts-scals" />
+    </el-dialog>
+    <el-dialog title="对比" :visible.sync="dialogComparison" width="60%">
+      <!-- <span>这是一段信息</span> -->
+      <div class="block" style="margin:0 auto 10px; width:80%;">
+        <el-cascader
+          v-model="sameAsin"
+          :options="options"
+          :props="{ multiple: true}"
+          collapse-tags
+          clearable
+          size="medium"
+          style="width: 80%"
+        />
+        <el-button size="medium" type="primary" @click="handleSameAsin">compare</el-button>
+      </div>
+      <div class="block" style="margin:0 auto 10px; width:80%;">
+        <el-date-picker
+          v-model="pickerDataSameAsin"
+          value-format="yyyy-MM-dd"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          size="medium"
+        />
+      </div>
+      <div id="echart_omparison" class="echarts-scals" />
     </el-dialog>
   </div>
 </template>
@@ -95,13 +149,18 @@
 <script>
 import echarts from "echarts";
 import { getRecent, getCharts, getParentASIN } from "@/api/table";
+import mixin from "./mixin.js";
+
 export default {
+  mixins: [mixin],
   data() {
     return {
       myChart: null,
       pickerData: "",
+      pickerDataSameAsin: "",
       dateList: [],
       echartList: [],
+      sameAsin: [],
       pickerOptions: {
         shortcuts: [
           {
@@ -134,6 +193,7 @@ export default {
         ]
       },
       dialogVisible: false,
+      dialogComparison: false,
       now: +new Date(1997, 9, 3),
       oneDay: 24 * 3600 * 1000,
       value: Math.random() * 1000,
@@ -152,20 +212,28 @@ export default {
         { value: "AdClicks", label: "AdClicks" },
         { value: "AdOrder", label: "AdOrder" },
         { value: "AdCR", label: "AdCR" }
-      ]
+      ],
+      indicators: [
+        "Sales",
+        "Order",
+        "UCR",
+        "Session",
+        "AdSpend",
+        "AdClicks",
+        "AdOrder",
+        "AdCR"
+      ],
+      oneEchartName: []
     };
   },
   watch: {
     pickerData(val) {
-      this.startTime = val[0];
-      this.endTime = val[1];
-      this._getCharts(this.$route.query.asin);
-      // const time = val[1].split("-")[1] - val[0].split("-")[1];
-      // this.dateList = [];
-      // for (let i = val[0].split("-")[1]; i <= time + 1; i++) {
-      //   this.dateList.push(i + "月份");
-      // }
-      // this.initEchart();
+      this._getOneCharts(this.oneEchartName, [this.asin]);
+    },
+    dialogVisible(val) {
+      if (!val) {
+        this.pickerData = "";
+      }
     }
   },
   mounted() {
@@ -175,8 +243,7 @@ export default {
       1}-${start.getDate()}`;
     this.startTime = `${end.getFullYear()}-${end.getMonth() +
       1}-${end.getDate()}`;
-    // this.initEchart();
-    // this.initLineChart();
+
     const asin = this.$route.query.asin;
     this.asin = asin;
     // debugger
@@ -186,7 +253,7 @@ export default {
     console.time("charts");
     this._getCharts(asin);
     this._getParentASIN(asin);
-    //     refundRate: 0 //最近三十天退货率
+    // refundRate: 0 //最近三十天退货率
     // sales: 151 // 销售额
     // spends: 0 //30天花费
     // ucr: 57.14 //最近三十天UCR
@@ -203,15 +270,36 @@ export default {
       //   height: "auto"
       // });
     },
-    handleEchart() {
-      this.dialogVisible = true
+    showComparison() {
+      this.dialogComparison = true;
     },
-    initEchart(options, index) {
-      const echart = echarts.init(this.domEchart[index], "light");
-      // for (let i = 0; i < echartsList.length; i++) {
-      //   echarts.init(echartsList[0], "light");
-      // this.echarts
+    handleSameAsin() {
+      const dom = document.getElementById("echart_omparison");
+      if (this.sameAsin.length) {
+        // this.sameAsin.forEach(item => {
+        //   // debugger
+        // })
+        const strArr = this.sameAsin.flat(Infinity)
+        // const strArr = this.sameAsin.join('","');
+        this._getMoreCharts(strArr, [this.asin], dom);
+      }
+
+      // if (this.sameAsin.length) {
+      //   this.
       // }
+      // debugger;
+    },
+    handleEchart(value) {
+      this.dialogVisible = true;
+      const nameArr = [];
+      nameArr.push(value.name);
+      this.oneEchartName = nameArr;
+      const dom = document.getElementById("echart");
+
+      this._getOneCharts(nameArr, [this.asin], dom);
+    },
+    initEchart(options, dom) {
+      const echart = echarts.init(dom, "light");
       // this.myChart = echarts.init(document.getElementById("echart"), "light");
       // 绘制图表
       echart.setOption({
@@ -247,6 +335,7 @@ export default {
           data: options.yName
         },
         grid: {
+          // 图标位置调整
           bottom: "10%",
           top: "30%",
           left: "10%",
@@ -308,73 +397,6 @@ export default {
       });
       window.addEventListener("resize", this.resizeChart);
     },
-    initLineChart() {
-      this.myChart1 = echarts.init(document.getElementById("echart1"), "light");
-
-      this.myChart1.setOption({
-        title: {
-          text: "动态数据 + 时间坐标轴"
-        },
-        tooltip: {
-          trigger: "axis",
-          formatter: function(params) {
-            params = params[0];
-            var date = new Date(params.name);
-            return (
-              date.getDate() +
-              "/" +
-              (date.getMonth() + 1) +
-              "/" +
-              date.getFullYear() +
-              " : " +
-              params.value[1]
-            );
-          },
-          axisPointer: {
-            animation: false
-          }
-        },
-        xAxis: {
-          type: "time",
-          splitLine: {
-            show: false
-          }
-        },
-        yAxis: {
-          type: "value",
-          boundaryGap: ["10%", "20%"],
-          offset: 100,
-          splitLine: {
-            show: false
-          }
-        },
-        series: [
-          {
-            name: "模拟数据",
-            type: "line",
-            showSymbol: false,
-            hoverAnimation: false,
-            data: this.data1
-          }
-        ]
-      });
-    },
-
-    randomData() {
-      this.now = new Date(+this.now + this.oneDay);
-      this.value = this.value + Math.random() * 21 - 10;
-      return {
-        name: this.now.toString(),
-        value: [
-          [
-            this.now.getFullYear(),
-            this.now.getMonth() + 1,
-            this.now.getDate()
-          ].join("/"),
-          Math.round(this.value)
-        ]
-      };
-    },
     _getRecent(value) {
       getRecent({ asin: value }).then(res => {
         this.recentData = res.data;
@@ -383,16 +405,7 @@ export default {
     },
     _getCharts(value) {
       const params = {
-        indicators: [
-          "Sales",
-          "Order",
-          "UCR",
-          "Session",
-          "AdSpend",
-          "AdClicks",
-          "AdOrder",
-          "AdCR"
-        ],
+        indicators: this.indicators,
         startTime: this.startTime,
         endTime: this.endTime,
         asins: [value]
@@ -449,9 +462,9 @@ export default {
           this.echartList = echartList;
           setTimeout(() => {
             this.domEchart = document.querySelectorAll(".echart-content");
-            console.log(this.domEchart);
+            // console.log(this.domEchart);
             echartList.forEach((item, index) => {
-              this.initEchart(item, index);
+              this.initEchart(item, this.domEchart[index]);
             });
           }, 20);
         }
@@ -473,6 +486,9 @@ export default {
 .content {
   width: 100%;
   height: calc(100vh - 50px);
+  .box-card {
+    height: calc(100vh - 150px);
+  }
   .card-info {
     color: $menuActiveText;
     > p {
@@ -486,7 +502,7 @@ export default {
     justify-content: space-around;
     height: 100%;
     .block {
-      width: 300px;
+      width: 310px;
       display: flex;
       flex-direction: column;
       .demonstration {
@@ -495,9 +511,14 @@ export default {
     }
   }
 }
+.echarts-scals {
+  margin-left: 10px;
+  width: 100%;
+  height: 500px;
+}
 .echart-list {
   display: flex;
-  justify-content: center;
+  justify-content: space-around;
   width: 100%;
   height: calc(100vh - 150px);
   overflow: auto;
@@ -512,11 +533,6 @@ export default {
     &:hover {
       box-shadow: 0 20px 20px rgba(0, 0, 0, 0.2);
       transition: all 0.3s;
-    }
-    .echarts {
-      margin-left: 10px;
-      width: 600px;
-      height: 400px;
     }
   }
 }
