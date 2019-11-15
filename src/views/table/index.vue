@@ -130,18 +130,6 @@
         filter-placement="bottom"
         align="center"
       >
-        <!-- <template slot="header"> -->
-        <!-- <span slot="header" @click="clickTitle">
-          站点
-          <i v-if="showStationFilter" class="el-icon-arrow-down" />
-          <i v-if="showStationFilter" class="el-icon-arrow-right" />
-          <span>{{ stationList.length }}</span>
-          <div v-if="filterStationList.length" style="position: absolute;right: 38px;top: -9px;">
-            <span v-for="(item,index) in filterStationList" :key="index">{{ item }}</span>
-          </div>
-        </span>-->
-
-        <!-- </template> -->
         <template slot-scope="scope">{{ scope.row.station }}</template>
       </el-table-column>
       <el-table-column
@@ -167,17 +155,6 @@
       <el-table-column label="FNSKU" align="center">
         <template slot-scope="scope">{{ scope.row.fnsku }}</template>
       </el-table-column>
-      <!-- <el-table-column class-name="status-col" label="Status" width="110" align="center">
-        <template slot-scope="scope">
-          <el-tag :type="scope.row.status | statusFilter">{{ scope.row.status }}</el-tag>
-        </template>
-      </el-table-column>-->
-      <!-- <el-table-column align="center" prop="created_at" label="Display_time" width="200">
-        <template slot-scope="scope">
-          <i class="el-icon-time" />
-          <span>{{ scope.row.display_time }}</span>
-        </template>
-      </el-table-column>-->
     </el-table>
     <div style="display: flex;justify-content: center;margin-top: 20px;">
       <el-pagination

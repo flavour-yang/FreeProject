@@ -1,12 +1,12 @@
 import request from '@/utils/request'
 import qs from 'qs'
-export function getList(params) {
-  return request({
-    url: '/table/list',
-    method: 'get',
-    params
-  })
-}
+// export function getList(params) {
+//   return request({
+//     url: '/table/list',
+//     method: 'get',
+//     params
+//   })
+// }
 
 export function getProjectList(params) {
   // params.paramsSerializer = params => {
@@ -98,13 +98,27 @@ export function getKeywordRankReport(params) { // //获取Keyword报表
   return request({
     url: '/api/v1/Product/GetKeywordRankReport',
     method: 'get',
+    headers: {
+      "content-type": "application/json; charset=utf-8"
+    },
+    // paramsSerializer: function(params) {
+    //   return qs.stringify(params, { indices: false })
+    // },
     params
   })
 }
 
 export function getKeywordChart(params) { // //获取keyword图表
   return request({
-    url: '/api/v1/Product/GetKeywordChart ',
+    url: '/api/v1/Product/GetKeywordChart',
+    method: 'get',
+    params
+  })
+}
+
+export function getAllAsin(params) { // 获取全部aisn
+  return request({
+    url: '/api/v1/Product/GetAllASIN',
     method: 'get',
     params
   })

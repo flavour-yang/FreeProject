@@ -143,7 +143,12 @@ export default {
                 data: [],
                 type: "bar",
                 stack: "总数",
-                barWidth: 10
+                // barWidth: 20,
+                markLine: {
+                  data: [
+                    { type: 'average', name: '平均值' }
+                  ]
+                }
               };
               if (obj.chartType === "StackedBarChart") {
                 serie.type = "bar";
@@ -188,7 +193,6 @@ export default {
         // "LineChart","StackedBarChart","BarChart"
         if (list && list.length) {
           console.time();
-          //   const serieList = []
           const obj = {
             name: "",
             chartType: "",
@@ -198,15 +202,27 @@ export default {
             series: []
           };
           list.forEach(el => {
-            obj.xValue = el.xNames;
-            const chartType = el.chartData[0].chartType;
-            el.chartData[0].data.forEach((item, index) => {
+            const result = [];
+            const objchild = {};
+            for (const i of el.xNames) {
+              if (!objchild[i]) {
+                result.push(i)
+                objchild[i] = 1
+              }
+            }
+            obj.xValue = result
+            el.chartData.forEach((elChart, index) => {
+              const chartType = elChart.chartType;
               const serie = {
-                name: item.yName,
+                name: [],
                 data: [],
                 type: "bar",
                 stack: "总数",
-                barWidth: 10
+                markLine: {
+                  data: [
+                    { type: 'average', name: '平均值' }
+                  ]
+                }
               };
               if (chartType === "StackedBarChart") {
                 serie.type = "bar";
@@ -222,12 +238,18 @@ export default {
               if (chartType === "StackedBarChart" && index === 0) {
                 serie.type = "line";
               }
-              serie.data = item.values;
+              // item.asin
+              elChart.data.forEach((item) => {
+                serie.data = item.values;
+                serie.name = item.yName
+                // serieList.push(serie)
+                // obj.yValue.push(item.values);
+                // obj.yName.push(item.yName);
+              });
               obj.series.push(serie);
-              // serieList.push(serie)
-              obj.yValue.push(item.values);
-              obj.yName.push(item.yName);
-            });
+            })
+            console.log(obj)
+            // el.chartData[0]
             // echartList.push(obj);
           });
           // echartList.ser
@@ -235,7 +257,7 @@ export default {
           setTimeout(() => {
             // echartList.forEach((item) => {
             this.initEchart(obj, dom);
-            console.log(obj)
+            // console.log(obj)
             // });
           }, 20);
         }

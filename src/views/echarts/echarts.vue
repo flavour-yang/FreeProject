@@ -60,50 +60,46 @@
                 <el-button type="primary" @click="showComparison">compare</el-button>
               </div>
             </div>
-            <!-- <div class="block">
+            <div class="block">
               <span class="demonstration">不同asin指标对比</span>
               <div>
-                <el-cascader :options="options" :props="{ multiple: true}" collapse-tags clearable />
-                <el-button type="primary">compare</el-button>
+                <el-cascader
+                  :options="differentAsinOptions"
+                  :props="{ multiple: true}"
+                  collapse-tags
+                  clearable
+                />
+                <el-button type="primary" @click="showDiffAsinComparison">compare</el-button>
               </div>
             </div>
-            <div class="block">
+            <!-- <div class="block">
               <span class="demonstration">不同asin不同指标对比</span>
               <div>
-                <el-cascader :options="options" :props="{ multiple: true}" collapse-tags clearable />
+                <el-cascader
+                  :options="differentAsinIndicatorOptions"
+                  :props="{ multiple: true}"
+                  collapse-tags
+                  clearable
+                />
                 <el-button type="primary">compare</el-button>
               </div>
             </div>-->
           </div>
         </el-header>
-        <el-main>
-          <!-- 柱 -->
-          <div id="sales" />
-          <!-- 柱 -->
-          <div id="order" />
-          <!-- 折线 -->
-          <div id="ucr" />
-          <!-- 柱 -->
-          <div id="session" />
-          <!-- 柱 -->
-          <div id="AD_spend" />
-          <!-- 柱 -->
-          <div id="AD_order" />
-          <!-- 折线 -->
-          <div id="AD_cr" />
-          <!-- 柱 -->
-          <div id="AD_sales" />
-          <!-- 折线 -->
-          <!-- <div id="AD_acos" /> -->
+        <el-main style="padding-top: 0">
           <div class="echart-list" style>
-            <!-- <div style="overflow: auto;"> -->
             <div
               v-for="(item, index) in echartList"
               :key="index"
               class="echart-content"
-              @click.capture.stop="handleEchart(item,$event)"
+              @click.capture.stop="handleEchart(item)"
             />
-            <!-- </div> -->
+            <div class="table-content" @click="handleRma">
+              <i>RMA</i>
+            </div>
+            <div class="table-content" @click="handleKwtrend">
+              <i>KW TRENDS</i>
+            </div>
           </div>
         </el-main>
       </el-container>
@@ -119,6 +115,7 @@
           range-separator="至"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
+          :picker-options="pickerOptions"
         />
       </div>
       <div id="echart" class="echarts-scals" />
@@ -146,9 +143,104 @@
           start-placeholder="开始日期"
           end-placeholder="结束日期"
           size="medium"
+          :picker-options="pickerOptions"
         />
       </div>
       <div id="echart_omparison" class="echarts-scals" />
+    </el-dialog>
+    <el-dialog title="对比" :visible.sync="dialogDifferentAsin" width="60%">
+      <!-- <span>这是一段信息</span> -->
+      <div class="block" style="margin:0 auto 10px; width:80%;">
+        <el-cascader
+          v-model="asinIndicator"
+          :options="differentAsinOptions"
+          :props="{ multiple: true}"
+          collapse-tags
+          clearable
+          size="medium"
+          style="width: 80%"
+        />
+        <el-button size="medium" type="primary" @click="handleComparisonAsin">compare</el-button>
+      </div>
+      <div class="block" style="margin:0 auto 10px; width:80%;">
+        <el-date-picker
+          v-model="pickerDataSameAsin"
+          value-format="yyyy-MM-dd"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          size="medium"
+          :picker-options="pickerOptions"
+        />
+      </div>
+      <div id="echart_asin_indicator" class="echarts-scals" />
+    </el-dialog>
+    <el-dialog title="RMA" :visible.sync="dialogRma" width="60%">
+      <!-- <span>这是一段信息</span> -->
+      <div class="block" style="margin:0 auto 10px; width:80%;">
+        <el-date-picker
+          v-model="pickerDataRma"
+          value-format="yyyy-MM-dd"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          size="medium"
+          :picker-options="pickerOptions"
+        />
+      </div>
+      <el-table
+        v-loading="listLoading"
+        :data="rmaList"
+        element-loading-text="Loading"
+        border
+        fit
+        highlight-current-row
+      >
+        <el-table-column label="time" align="center">
+          <template slot-scope="scope">{{ scope.row.returnData }}</template>
+        </el-table-column>
+        <el-table-column label="reason" align="center">
+          <template slot-scope="scope">{{ scope.row.reason }}</template>
+        </el-table-column>
+        <el-table-column label="comment" align="center">
+          <template slot-scope="scope">{{ scope.row.customerComments }}</template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
+    <el-dialog title="KW TRENDS" :visible.sync="dialogKwtrend" width="60%">
+      <!-- <span>这是一段信息</span> -->
+      <div class="block" style="margin:0 auto 10px; width:80%;">
+        <el-date-picker
+          v-model="pickerDataKwtrend"
+          value-format="yyyy-MM-dd"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          size="medium"
+          :picker-options="pickerOptions"
+        />
+      </div>
+      <el-table
+        v-loading="listLoading"
+        :data="kwtrendList"
+        element-loading-text="Loading"
+        border
+        fit
+        highlight-current-row
+      >
+        <el-table-column label="keyword" align="center">
+          <template slot-scope="scope">{{ scope.row.keyword }}</template>
+        </el-table-column>
+        <el-table-column label="searchNum" align="center">
+          <template slot-scope="scope">{{ scope.row.searchNum }}</template>
+        </el-table-column>
+        <el-table-column label="searchCapacity" align="center">
+          <template slot-scope="scope">{{ scope.row.searchCapacity }}</template>
+        </el-table-column>
+      </el-table>
     </el-dialog>
   </div>
 </template>
@@ -161,7 +253,8 @@ import {
   getParentASIN,
   geRma,
   getKeywordRankReport,
-  getKeywordChart
+  getKeywordChart,
+  getAllAsin
 } from "@/api/table";
 import mixin from "./mixin.js";
 
@@ -169,54 +262,34 @@ export default {
   mixins: [mixin],
   data() {
     return {
-      myChart: null,
       pickerData: "",
       pickerDataSameAsin: "",
+      pickerDataRma: "",
+      pickerDataKwtrend: "",
+      startTime: "",
+      endTime: "",
+      asin: "",
+      dialogVisible: false,
+      dialogComparison: false,
+      dialogRma: false,
+      dialogKwtrend: false,
+      dialogDifferentAsin: false,
+      listLoading: true,
+      oneDay: 24 * 3600 * 1000,
+      value: Math.random() * 1000,
+      domEchart: null,
+      myChart: null,
+      parentAsinList: [],
+      oneEchartName: [],
       dateList: [],
       echartList: [],
       sameAsin: [],
-      pickerOptions: {
-        shortcuts: [
-          {
-            text: "最近一周",
-            onClick(picker) {
-              const end = new Date();
-              const start = new Date();
-              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
-              picker.$emit("pick", [start, end]);
-            }
-          },
-          {
-            text: "最近一个月",
-            onClick(picker) {
-              const end = new Date();
-              const start = new Date();
-              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
-              picker.$emit("pick", [start, end]);
-            }
-          },
-          {
-            text: "最近三个月",
-            onClick(picker) {
-              const end = new Date();
-              const start = new Date();
-              start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
-              picker.$emit("pick", [start, end]);
-            }
-          }
-        ]
-      },
-      dialogVisible: false,
-      dialogComparison: false,
-      now: +new Date(1997, 9, 3),
-      oneDay: 24 * 3600 * 1000,
-      value: Math.random() * 1000,
+      asinIndicator: [],
+      rmaList: [],
+      kwtrendList: [],
       recentData: [],
-      startTime: "",
-      endTime: "",
-      domEchart: null,
-      parentAsinList: [],
-      asin: "",
+      differentAsinOptions: [],
+      differentAsinIndicatorOptions: [],
       options: [
         { value: "Sales", label: "Sales" },
         { value: "Order", label: "Order" },
@@ -227,6 +300,37 @@ export default {
         { value: "AdOrder", label: "AdOrder" },
         { value: "AdCR", label: "AdCR" }
       ],
+      pickerOptions: {
+        shortcuts: [
+          {
+            text: "最近30天",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+              picker.$emit("pick", [start, end]);
+            }
+          },
+          {
+            text: "最近90天",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+              picker.$emit("pick", [start, end]);
+            }
+          },
+          {
+            text: "最近180天",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 180);
+              picker.$emit("pick", [start, end]);
+            }
+          }
+        ]
+      },
       indicators: [
         "Sales",
         "Order",
@@ -236,8 +340,7 @@ export default {
         "AdClicks",
         "AdOrder",
         "AdCR"
-      ],
-      oneEchartName: []
+      ]
     };
   },
   watch: {
@@ -251,7 +354,15 @@ export default {
       }
     },
     pickerDataSameAsin(val) {
-      this.handleSameAsin();
+      if (val) {
+        this.handleSameAsin();
+      }
+    },
+    pickerDataRma(value) {
+      value && this._getRma();
+    },
+    pickerDataKwtrend(value) {
+      value && this._getKeywordRankReport();
     }
   },
   mounted() {
@@ -266,18 +377,9 @@ export default {
 
     const asin = this.$route.query.asin;
     this.asin = asin;
-    // debugger
-
     this._getRecent(asin);
     this._getCharts(asin);
     this._getParentASIN(asin);
-    this._geRma();
-    // refundRate: 0 //最近三十天退货率
-    // sales: 151 // 销售额
-    // spends: 0 //30天花费
-    // ucr: 57.14 //最近三十天UCR
-    // unitsOrders: 20 // 销量
-    // this.chart = echarts.init(document.getElementById("echart"));
   },
   destroyed() {
     window.removeEventListener("resize", this.resizeChart);
@@ -289,12 +391,15 @@ export default {
       //   height: "auto"
       // });
     },
+    showDiffAsinComparison() {
+      this.dialogDifferentAsin = true;
+    },
     chooseParentAsin(value) {
       this.asin = value;
       this._getRecent(value);
       this._getCharts(value);
       this._getParentASIN(value);
-      this._geRma();
+      // this._getRma();
     },
     showComparison() {
       this.dialogComparison = true;
@@ -302,20 +407,11 @@ export default {
     handleSameAsin() {
       const dom = document.getElementById("echart_omparison");
       if (this.sameAsin.length) {
-        // this.sameAsin.forEach(item => {
-        //   // debugger
-        // })
         const strArr = this.sameAsin.flat(Infinity);
-        // const strArr = this.sameAsin.join('","');
         this._getMoreCharts(strArr, [this.asin], dom);
       }
-
-      // if (this.sameAsin.length) {
-      //   this.
-      // }
-      // debugger;
     },
-    handleEchart(value, event) {
+    handleEchart(value) {
       this.dialogVisible = true;
       const nameArr = [];
       nameArr.push(value.name);
@@ -324,12 +420,31 @@ export default {
         const dom = document.getElementById("echart");
         this._getOneCharts(nameArr, [this.asin], dom);
       }, 20);
-      event.stopPropagation();
+    },
+    handleRma() {
+      this.dialogRma = true;
+      this._getRma();
+    },
+    handleComparisonAsin() {
+      const asinList = [];
+      const indicator = [];
+      const dom = document.getElementById("echart_asin_indicator");
+      this.asinIndicator.forEach(item => {
+        if (item[0] === "ASIN") {
+          asinList.push(item[1]);
+        }
+        if (item[0] === "indicator") {
+          indicator.push(item[1]);
+        }
+      });
+      this._getMoreCharts(indicator, asinList, dom);
+    },
+    handleKwtrend() {
+      this.dialogKwtrend = true;
+      this._getKeywordRankReport();
     },
     initEchart(options, dom) {
       const echart = echarts.init(dom, "light");
-      // this.myChart = echarts.init(document.getElementById("echart"), "light");
-      // 绘制图表
       echart.setOption({
         title: {
           text: options.name,
@@ -369,39 +484,6 @@ export default {
           left: "10%",
           right: "4%"
         },
-        // toolbox: {
-        //   show: true,
-        //   feature: {
-        //     dataZoom: {
-        //       yAxisIndex: "none"
-        //     },
-        //     mark: {
-        //       show: true
-        //     },
-        //     magicType: {
-        //       show: true,
-        //       type: ["line", "bar"]
-        //     },
-        //     restore: {
-        //       show: true
-        //     },
-        //     saveAsImage: {
-        //       show: true
-        //     }
-        //   }
-        // },
-        // dataZoom: [
-        //   {
-        //     show: true,
-        //     realtime: true,
-        //     y: 50,
-        //     height: 16,
-        //     start: 0,
-        //     end: 100,
-        //     left: "10%",
-        //     width: "80%"
-        //   }
-        // ],
         xAxis: [
           {
             type: "category",
@@ -422,6 +504,10 @@ export default {
         ],
         series: options.series,
         calculable: false
+      });
+      echart.resize({
+        width: "auto",
+        height: "auto"
       });
       window.addEventListener("resize", this.resizeChart);
     },
@@ -464,8 +550,7 @@ export default {
                 name: item.yName,
                 data: [],
                 type: "bar",
-                stack: "总数",
-                barWidth: 10
+                stack: "总数"
               };
               if (obj.chartType === "StackedBarChart") {
                 serie.type = "bar";
@@ -495,8 +580,9 @@ export default {
               this.initEchart(item, this.domEchart[index]);
             });
           }, 20);
+          this._getAllAsin();
         }
-        console.log(this.echartList);
+        // console.log(this.echartList);
       });
     },
     _getParentASIN(value) {
@@ -504,30 +590,59 @@ export default {
         this.parentAsinList = res.data;
       });
     },
-    _geRma() {
+    _getRma() {
       const params = {
-        StartTime: this.startTime,
-        EndTime: this.endTime,
+        StartTime: this.pickerDataRma[0] || this.startTime,
+        EndTime: this.pickerDataRma[1] || this.endTime,
         ASIN: this.asin
       };
       geRma(params).then(res => {
-        console.log(res);
+        // console.log(res);
+        this.rmaList = res.data;
+        this.listLoading = false;
       });
     },
     _getKeywordRankReport() {
       const params = {
-        StartTime: "",
-        EndTime: "",
-        ASIN: "",
-        PageIndex: "",
-        PageSize: ""
+        StartTime: this.pickerDataKwtrend[0] || this.startTime,
+        EndTime: this.pickerDataKwtrend[1] || this.endTime,
+        ASIN: [this.asin],
+        PageIndex: 1,
+        PageSize: 10
       };
       getKeywordRankReport(params).then(res => {
-        console.log(res);
+        // console.log(res);
+        this.kwtrendList = res.data.dataList;
+        this.listLoading = false;
       });
     },
     _getKeywordChart() {
       getKeywordChart().then(res => {});
+    },
+    _getAllAsin() {
+      getAllAsin().then(res => {
+        const list = res.data;
+        const obj = {
+          label: "ASIN",
+          value: "ASIN",
+          children: []
+        };
+        const indicator = {
+          label: "indicator",
+          value: "indicator",
+          children: this.options
+        };
+        this.differentAsinOptions = [];
+        list.forEach(item => {
+          obj.children.push({
+            value: item,
+            label: item
+          });
+        });
+        this.differentAsinOptions.push(indicator);
+        this.differentAsinOptions.push(obj);
+        // debugger
+      });
     }
   }
 };
@@ -581,20 +696,27 @@ export default {
   display: flex;
   justify-content: space-around;
   width: 100%;
-  height: calc(100vh - 150px);
+  height: calc(100vh - 200px);
   overflow: auto;
   flex-wrap: wrap;
-  .echart-content {
+  .echart-content,
+  .table-content {
     border-radius: 5px;
-    width: 310px;
-    height: 260px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    width: 290px;
+    height: 230px;
+    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
     margin: 10px;
     transition: all 0.3s;
     &:hover {
       box-shadow: 0 20px 20px rgba(0, 0, 0, 0.2);
       transition: all 0.3s;
     }
+  }
+  .table-content {
+    font-size: 40px;
+    line-height: 230px;
+    text-align: center;
+    user-select: none;
   }
 }
 </style>
