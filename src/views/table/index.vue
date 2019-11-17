@@ -36,7 +36,7 @@
       <div class="item-left">
         <el-upload
           class="upload-demo"
-          action="http://120.26.222.134:9005/api/v1/product/upload/"
+          action="http://120.26.222.134:9005/api/v1/Attachment/upload"
           :on-preview="handlePreview"
           :on-remove="handleRemove"
           :on-success="handleSucess"
@@ -175,7 +175,8 @@ import {
   postProjectPicture,
   getExcelTypes,
   getStations,
-  getLines
+  getLines,
+  insertExcelData
 } from "@/api/table";
 
 export default {
@@ -263,10 +264,25 @@ export default {
     handleRemove(file, fileList) {
       console.log(file, fileList);
     },
-    handleSucess() {
-      this.loading.close();
+    handleSucess(a, b, c) {
+      if (a.code === 1000) {
+        return insertExcelData({
+          excelType: this.excelValue,
+          attachmentGuid: a.data[0]
+        }).then(res => {
+          this.loading.close();
+          if (res.code === 1000) {
+            this.$message.success("附件上传成功!");
+          }
+        });
+      } else {
+        this.$message.success("上传失败!");
+        console.log(a, b)
+        this.loading.close();
+      }
     },
     handleError() {
+      this.$message.error("上传失败");
       this.loading.close();
     },
     handlePreview(file) {

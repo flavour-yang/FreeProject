@@ -27,7 +27,15 @@ export function getProjectList(params) {
   })
 }
 
-export function postProjectPicture(data) {
+export function insertExcelData(data) { // 上传产品图片
+  return request({
+    url: '/api/v1/Product/InsertExcelData',
+    method: 'post',
+    data
+  })
+}
+
+export function postProjectPicture(data) { // 上传产品图片
   return request({
     url: '/api/v1/Product/AddProductPicture',
     method: 'post',
@@ -124,3 +132,44 @@ export function getAllAsin(params) { // 获取全部aisn
   })
 }
 
+export function getAdAnalysisReport(data) { // 获取广告分析报表
+  return request({
+    url: '/api/v1/Product/GetAdAnalysisReport',
+    method: 'post',
+    headers: {
+      'Content-Type': ' application/json; charset=utf-8'
+    },
+    timeout: 60000,
+    paramsSerializer: function(params) {
+      return qs.stringify(params, { indices: false })
+    },
+    data
+  })
+}
+
+export function getAllCampaignNames(params) { // 获取所有广告组名称
+  return request({
+    url: '/api/v1/Product/GetAllCampaignNames',
+    method: 'get',
+    params
+  })
+}
+
+export function insertSearchTermReportRemark(data) {
+  return request({
+    url: '/api/v1/Product/InsertSearchTermReportRemark', // 添加备注
+    method: 'post',
+    data
+  })
+}
+
+export function insertSearchTermReportSign(data) {
+  return request({
+    url: '/api/v1/Product/InsertSearchTermReportSign', // 添加取消否词
+    method: 'post',
+    data
+  })
+}
+//
+
+//

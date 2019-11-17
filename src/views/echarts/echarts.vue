@@ -5,9 +5,10 @@
         <el-card class="box-card" style="margin: 10px">
           <div slot="header" class="clearfix">
             <!-- <span>近三十天数据</span> -->
+            <span style="color: #409EFF; cursor: pointer;" @click="goBack">返回</span>
             <p>
               <span style="font-weight: bold;">ASIN:</span>
-              <span>{{ asin }}</span>
+              <span class="asin-child" @click="chooseChildAsin(item)">{{ childAsin }}</span>
             </p>
             <el-divider />
             <div>
@@ -100,6 +101,9 @@
             <div class="table-content" @click="handleKwtrend">
               <i>KW TRENDS</i>
             </div>
+            <div class="table-content" @click="handleCampaign">
+              <i>广告分析</i>
+            </div>
           </div>
         </el-main>
       </el-container>
@@ -148,7 +152,7 @@
       </div>
       <div id="echart_omparison" class="echarts-scals" />
     </el-dialog>
-    <el-dialog title="对比" :visible.sync="dialogDifferentAsin" width="60%">
+    <el-dialog title="对比" :fullscreen="true" :visible.sync="dialogDifferentAsin" width="60%">
       <!-- <span>这是一段信息</span> -->
       <div class="block" style="margin:0 auto 10px; width:80%;">
         <el-cascader
@@ -174,7 +178,7 @@
           :picker-options="pickerOptions"
         />
       </div>
-      <div id="echart_asin_indicator" class="echarts-scals" />
+      <div v-for="(item, index) in differentAsinEchart" :key="index" class="echarts-diff-asin" />
     </el-dialog>
     <el-dialog title="RMA" :visible.sync="dialogRma" width="60%">
       <!-- <span>这是一段信息</span> -->
@@ -242,6 +246,340 @@
         </el-table-column>
       </el-table>
     </el-dialog>
+    <el-dialog title="广告分析" :fullscreen="true" :visible.sync="dialogCampaign">
+      <!-- <span>这是一段信息</span> -->
+      <div class="block" style="margin:0 auto 10px; width:80%;">
+        <el-select
+          v-model="campaignValue"
+          multiple
+          filterable
+          allow-create
+          placeholder="请选择"
+          style="width: 360px"
+        >
+          <el-option
+            v-for="item in campaignNameList"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+        <el-date-picker
+          v-model="pickerDataFirstTime"
+          value-format="yyyy-MM-dd"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          size="medium"
+        />
+        <el-date-picker
+          v-model="pickerDataSecondTime"
+          value-format="yyyy-MM-dd"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          size="medium"
+        />
+        <el-button type="primary" @click="showAdAnalysisReport">compare</el-button>
+      </div>
+      <div class="block" style="margin:0 auto 10px; width:80%;" />
+      <el-table
+        v-loading="ADLoading"
+        :data="ADList"
+        element-loading-text="Loading"
+        border
+        size="small"
+        fit
+        type="index"
+        highlight-current-row
+      >
+        <el-table-column label="searchterm" align="center">
+          <template slot-scope="scope">
+            <el-tooltip placement="top">
+              <div slot="content">
+                <p
+                  v-for="(item, index) in scope.row.signHistory"
+                  :key="index"
+                  style="margin: 3px 0"
+                >{{ item.matchType }} {{ (item.sign === true ? '否词' : '取消否词') }}{{ item.date }}</p>
+                <span v-show="!scope.row.signHistory.length">无</span>
+              </div>
+              <span>{{ scope.row.customerSearchTerm }}</span>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+        <el-table-column width="120" label="remark" align="center">
+          <template slot-scope="scope">
+            <el-tooltip
+              v-show="scope.row.remark"
+              class="item"
+              effect="dark"
+              :content="scope.row.remark"
+              placement="top-start"
+              :disabled="false"
+            >
+              <el-button
+                size="mini"
+                @click="remarkFocus(scope.$index,scope.row.customerSearchTerm, scope.row.remark )"
+              >{{ scope.row.remark }}</el-button>
+            </el-tooltip>
+            <el-button
+              v-show="!scope.row.remark"
+              size="mini"
+              @click="remarkFocus(scope.$index,scope.row.customerSearchTerm)"
+            >添加备注</el-button>
+          </template>
+        </el-table-column>
+        <el-table-column label="列表1" align="center">
+          <el-table-column label="Impressions" align="center">
+            <el-table-column label="Auto" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.auto && scope.row.columns1.clicks.auto.value }}</template>
+            </el-table-column>
+            <el-table-column label="Broad" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.broad && scope.row.columns1.clicks.broad.value }}</template>
+            </el-table-column>
+            <el-table-column label="Exat" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.exat && scope.row.columns1.clicks.exat.value }}</template>
+            </el-table-column>
+          </el-table-column>
+          <el-table-column label="Clicks" align="center">
+            <el-table-column width="80" label="Auto" align="center">
+              <template slot-scope="scope">
+                {{ scope.row.columns1.clicks.auto && scope.row.columns1.clicks.auto.value }}
+                <el-button
+                  v-show="scope.row.columns1.clicks.auto && scope.row.columns1.clicks.auto.value+''"
+                  size="mini"
+                  @click="changeReport(scope.$index,scope.row.customerSearchTerm,'Auto', 'columns1')"
+                >{{ scope.row.columns1.clicks.auto && (scope.row.columns1.clicks.auto.sign ? 'undo' : 'Neg') }}</el-button>
+              </template>
+            </el-table-column>
+            <el-table-column label="Broad" align="center">
+              <template slot-scope="scope">
+                {{ scope.row.columns1.clicks.broad && scope.row.columns1.clicks.broad.value }}
+                <el-button
+                  v-show="scope.row.columns1.clicks.broad && scope.row.columns1.clicks.broad.value+''"
+                  size="mini"
+                  @click="changeReport(scope.$index,scope.row.customerSearchTerm,'Broad','columns1')"
+                >{{ scope.row.columns1.clicks.broad && (scope.row.columns1.clicks.broad.sign ? 'undo' : 'Neg') }}</el-button>
+              </template>
+            </el-table-column>
+            <el-table-column label="Exat" align="center">
+              <template slot-scope="scope">
+                {{ scope.row.columns1.clicks.exat && scope.row.columns1.clicks.exat.value }}
+                <el-button
+                  v-show="scope.row.columns1.clicks.exat && scope.row.columns1.clicks.exat.value+''"
+                  size="mini"
+                  @click="changeReport(scope.$index,scope.row.customerSearchTerm,'Exat','columns1')"
+                >{{ scope.row.columns1.clicks.exat && (scope.row.columns1.clicks.exat.sign ? 'undo' : 'Neg') }}</el-button>
+              </template>
+            </el-table-column>
+          </el-table-column>
+          <el-table-column label="Spend" align="center">
+            <el-table-column label="Auto" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.auto && scope.row.columns1.clicks.auto.value }}</template>
+            </el-table-column>
+            <el-table-column label="Broad" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.broad && scope.row.columns1.clicks.broad.value }}</template>
+            </el-table-column>
+            <el-table-column label="Exat" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.exat && scope.row.columns1.clicks.exat.value }}</template>
+            </el-table-column>
+          </el-table-column>
+          <el-table-column label="Unit Sold" align="center">
+            <el-table-column label="Auto" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.auto && scope.row.columns1.clicks.auto.value }}</template>
+            </el-table-column>
+            <el-table-column label="Broad" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.broad && scope.row.columns1.clicks.broad.value }}</template>
+            </el-table-column>
+            <el-table-column label="Exat" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.exat && scope.row.columns1.clicks.exat.value }}</template>
+            </el-table-column>
+          </el-table-column>
+          <el-table-column label="CR" align="center">
+            <el-table-column label="Auto" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.auto && scope.row.columns1.clicks.auto.value }}</template>
+            </el-table-column>
+            <el-table-column label="Broad" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.broad && scope.row.columns1.clicks.broad.value }}</template>
+            </el-table-column>
+            <el-table-column label="Exat" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.exat && scope.row.columns1.clicks.exat.value }}</template>
+            </el-table-column>
+            <el-table-column label="Total" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.total && scope.row.columns1.clicks.total.value }}</template>
+            </el-table-column>
+          </el-table-column>
+          <el-table-column label="Ctr" align="center">
+            <el-table-column label="Auto" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.auto && scope.row.columns1.clicks.auto.value }}</template>
+            </el-table-column>
+            <el-table-column label="Broad" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.broad && scope.row.columns1.clicks.broad.value }}</template>
+            </el-table-column>
+            <el-table-column label="Exat" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.exat && scope.row.columns1.clicks.exat.value }}</template>
+            </el-table-column>
+            <el-table-column label="Total" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns1.clicks.total && scope.row.columns1.clicks.total.value }}</template>
+            </el-table-column>
+          </el-table-column>
+        </el-table-column>
+        <el-table-column label="列表2" align="center">
+          <el-table-column label="Impressions" align="center">
+            <el-table-column label="Auto" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.auto && scope.row.columns2.clicks.auto.value }}</template>
+            </el-table-column>
+            <el-table-column label="Broad" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.broad && scope.row.columns2.clicks.broad.value }}</template>
+            </el-table-column>
+            <el-table-column label="Exat" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.exat && scope.row.columns2.clicks.exat.value }}</template>
+            </el-table-column>
+          </el-table-column>
+          <el-table-column label="Clicks" align="center">
+            <el-table-column label="Auto" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.auto && scope.row.columns2.clicks.auto.value }}</template>
+            </el-table-column>
+            <el-table-column label="Broad" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.broad && scope.row.columns2.clicks.broad.value }}</template>
+            </el-table-column>
+            <el-table-column label="Exat" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.exat && scope.row.columns2.clicks.exat.value }}</template>
+            </el-table-column>
+          </el-table-column>
+          <el-table-column label="Spend" align="center">
+            <el-table-column label="Auto" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.auto && scope.row.columns2.clicks.auto.value }}</template>
+            </el-table-column>
+            <el-table-column label="Broad" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.broad && scope.row.columns2.clicks.broad.value }}</template>
+            </el-table-column>
+            <el-table-column label="Exat" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.exat && scope.row.columns2.clicks.exat.value }}</template>
+            </el-table-column>
+          </el-table-column>
+          <el-table-column label="Unit Sold" align="center">
+            <el-table-column label="Auto" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.auto && scope.row.columns2.clicks.auto.value }}</template>
+            </el-table-column>
+            <el-table-column label="Broad" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.broad && scope.row.columns2.clicks.broad.value }}</template>
+            </el-table-column>
+            <el-table-column label="Exat" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.exat && scope.row.columns2.clicks.exat.value }}</template>
+            </el-table-column>
+          </el-table-column>
+          <el-table-column label="CR" align="center">
+            <el-table-column label="Auto" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.auto && scope.row.columns2.clicks.auto.value }}</template>
+            </el-table-column>
+            <el-table-column label="Broad" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.broad && scope.row.columns2.clicks.broad.value }}</template>
+            </el-table-column>
+            <el-table-column label="Exat" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.exat && scope.row.columns2.clicks.exat.value }}</template>
+            </el-table-column>
+            <el-table-column label="Total" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.total && scope.row.columns2.clicks.total.value }}</template>
+            </el-table-column>
+          </el-table-column>
+          <el-table-column label="Ctr" align="center">
+            <el-table-column label="Auto" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.auto && scope.row.columns2.clicks.auto.value }}</template>
+            </el-table-column>
+            <el-table-column label="Broad" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.broad && scope.row.columns2.clicks.broad.value }}</template>
+            </el-table-column>
+            <el-table-column label="Exat" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.exat && scope.row.columns2.clicks.exat.value }}</template>
+            </el-table-column>
+            <el-table-column label="Total" align="center">
+              <template
+                slot-scope="scope"
+              >{{ scope.row.columns2.clicks.total && scope.row.columns2.clicks.total.value }}</template>
+            </el-table-column>
+          </el-table-column>
+        </el-table-column>
+        <!-- <el-table-column label="列表2" align="center">
+          <template slot-scope="scope">{{ scope.row.searchCapacity }}</template>
+        </el-table-column>-->
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
@@ -254,7 +592,11 @@ import {
   geRma,
   getKeywordRankReport,
   getKeywordChart,
-  getAllAsin
+  getAllAsin,
+  getAdAnalysisReport,
+  getAllCampaignNames,
+  insertSearchTermReportRemark,
+  insertSearchTermReportSign
 } from "@/api/table";
 import mixin from "./mixin.js";
 
@@ -262,23 +604,31 @@ export default {
   mixins: [mixin],
   data() {
     return {
+      hoverActiveIndex: -1,
       pickerData: "",
       pickerDataSameAsin: "",
       pickerDataRma: "",
       pickerDataKwtrend: "",
+      pickerDataFirstTime: "",
+      pickerDataSecondTime: "",
       startTime: "",
       endTime: "",
       asin: "",
+      childAsin: "",
+      campaignValue: "",
       dialogVisible: false,
       dialogComparison: false,
       dialogRma: false,
       dialogKwtrend: false,
+      dialogCampaign: false,
       dialogDifferentAsin: false,
       listLoading: true,
+      ADLoading: false,
       oneDay: 24 * 3600 * 1000,
       value: Math.random() * 1000,
       domEchart: null,
       myChart: null,
+      ADList: [],
       parentAsinList: [],
       oneEchartName: [],
       dateList: [],
@@ -290,6 +640,8 @@ export default {
       recentData: [],
       differentAsinOptions: [],
       differentAsinIndicatorOptions: [],
+      differentAsinEchart: [],
+      campaignNameList: [],
       options: [
         { value: "Sales", label: "Sales" },
         { value: "Order", label: "Order" },
@@ -376,29 +728,87 @@ export default {
       1}-${end.getDate()}`;
 
     const asin = this.$route.query.asin;
+    this.childAsin = asin;
     this.asin = asin;
     this._getRecent(asin);
     this._getCharts(asin);
     this._getParentASIN(asin);
+    // this._putReportRemark();
   },
   destroyed() {
     window.removeEventListener("resize", this.resizeChart);
   },
   methods: {
+    goBack() {
+      this.$router.go(-1);
+    },
     resizeChart() {
       // this.myChart.resize({
       //   width: "auto",
       //   height: "auto"
       // });
     },
+    remarkFocus(index, customer, value) {
+      // const h = this.$createElement;
+      this.$prompt("请输入修改信息", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        inputValue: value
+      })
+        .then(({ value }) => {
+          this._putReportRemark({
+            CustomerSearchTerm: customer,
+            Remark: value
+          })
+            .then(res => {
+              if (res.code === 1000) {
+                this.ADList[index].remark = value;
+                this.$message({
+                  type: "success",
+                  message: "备注信息修改成功"
+                });
+              }
+            })
+            .catch(err => {
+              this.$message({
+                type: "info",
+                message: "修改失败" + err.code
+              });
+            });
+        })
+        .catch(() => {});
+    },
+    changeReport(index, customer, type, column) {
+      this._putTermReportSign({
+        CustomerSearchTerm: customer,
+        Remark: type,
+        index,
+        column
+      });
+    },
+    changeRemark() {},
+    ADmouseEnter(row, column, cell, event) {
+      // debugger
+      console.log(row, column, cell, event);
+    },
+    showAdAnalysisReport() {
+      // this.
+      this.ADLoading = true;
+      this._getAdAnalysisReport();
+    },
     showDiffAsinComparison() {
       this.dialogDifferentAsin = true;
+    },
+    chooseChildAsin() {
+      this.asin = this.childAsin;
+      this._getRecent(this.asin);
+      this._getCharts(this.asin);
     },
     chooseParentAsin(value) {
       this.asin = value;
       this._getRecent(value);
       this._getCharts(value);
-      this._getParentASIN(value);
+      // this._getParentASIN(value);
       // this._getRma();
     },
     showComparison() {
@@ -428,7 +838,7 @@ export default {
     handleComparisonAsin() {
       const asinList = [];
       const indicator = [];
-      const dom = document.getElementById("echart_asin_indicator");
+      // const dom = document.getElementById("echart_asin_indicator");
       this.asinIndicator.forEach(item => {
         if (item[0] === "ASIN") {
           asinList.push(item[1]);
@@ -437,11 +847,15 @@ export default {
           indicator.push(item[1]);
         }
       });
-      this._getMoreCharts(indicator, asinList, dom);
+      this._diffAsin(indicator, asinList);
     },
     handleKwtrend() {
       this.dialogKwtrend = true;
       this._getKeywordRankReport();
+    },
+    handleCampaign() {
+      this.dialogCampaign = true;
+      this._getAllCampaignNames();
     },
     initEchart(options, dom) {
       const echart = echarts.init(dom, "light");
@@ -643,6 +1057,67 @@ export default {
         this.differentAsinOptions.push(obj);
         // debugger
       });
+    },
+    // 获取广告分析
+    _getAdAnalysisReport() {
+      const nameList = [];
+      this.campaignValue.forEach(item => {
+        nameList.push(item);
+      });
+      const params = {
+        campaignNames: nameList,
+        startTime1: this.pickerDataFirstTime[0] || "",
+        endTime1: this.pickerDataFirstTime[1] || "",
+        startTime2: this.pickerDataSecondTime[0] || "",
+        endTime2: this.pickerDataSecondTime[1] || ""
+      };
+      getAdAnalysisReport(params)
+        .then(res => {
+          this.ADLoading = false;
+          this.ADList = res.data;
+        })
+        .catch(err => {
+          this.ADLoading = false;
+          this.$message.info("error: ", err.code, err.message);
+        });
+    },
+    _getAllCampaignNames() {
+      // 获取所有广告组名称
+      getAllCampaignNames().then(res => {
+        this.campaignNameList = [];
+        res.data.forEach(item => {
+          this.campaignNameList.push({ value: item, label: item });
+        });
+      });
+    },
+    _putReportRemark({ CustomerSearchTerm, Remark }) {
+      const params = {
+        CustomerSearchTerm: CustomerSearchTerm,
+        Remark: Remark
+      };
+      return insertSearchTermReportRemark(params).then(res => {
+        // console.log(res);
+        return res;
+      });
+    },
+    _putTermReportSign({ CustomerSearchTerm, Remark, index, column }) {
+      const params = {
+        CustomerSearchTerm: CustomerSearchTerm,
+        MatchType: Remark
+      };
+      const str = Remark.toLocaleLowerCase()
+      insertSearchTermReportSign(params)
+        .then(res => {
+          if (res.code === 1000) {
+            this.ADList[index][column].clicks[str].sign = res.data;
+            this.$message.success("添加取消否词操作成功!");
+          } else {
+            this.$message.info("失败!" + res.code + res.message);
+          }
+        })
+        .catch(err => {
+          this.$message.error("失败!" + err.code + err.message);
+        });
     }
   }
 };
@@ -657,7 +1132,8 @@ export default {
   .box-card {
     height: calc(100vh - 150px);
   }
-  .asin-parent {
+  .asin-parent,
+  .asin-child {
     cursor: pointer;
     &:hover {
       color: $menuActiveText;
@@ -692,11 +1168,16 @@ export default {
   width: 100%;
   height: 500px;
 }
+.echarts-diff-asin {
+  width: 40%;
+  display: inline-block;
+  height: 430px;
+}
 .echart-list {
   display: flex;
   justify-content: space-around;
   width: 100%;
-  height: calc(100vh - 200px);
+  height: calc(100vh - 180px);
   overflow: auto;
   flex-wrap: wrap;
   .echart-content,
