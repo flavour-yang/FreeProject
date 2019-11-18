@@ -14,6 +14,27 @@ export default {
   },
   methods: {
     initOneEchart(options, dom) { // 放大后的echart
+      // const serie = options.series.splice(1, 1)
+      // options.series.push(serie)
+      options.series = options.series.reverse()
+      var arr = options.series.pop()
+      options.series.unshift(arr)
+      if (options.series.length > 1) {
+        options.series.forEach(item => {
+          if (item.name === 'natural order') {
+            item['itemStyle'] = { color: '#91ca8c' }
+          }
+          if (item.name === 'ad order') {
+            item['itemStyle'] = { color: '#dd6b66' }
+          }
+          if (item.name === 'natural session') {
+            item['itemStyle'] = { color: '#91ca8c' }
+          }
+          if (item.name === 'ad session') {
+            item['itemStyle'] = { color: '#dd6b66' }
+          }
+        })
+      }
       const echart = echarts.init(dom, "light");
       // this.myChart = echarts.init(document.getElementById("echart"), "light");
       // 绘制图表
