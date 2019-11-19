@@ -36,7 +36,7 @@
       <div class="item-left">
         <el-upload
           class="upload-demo"
-          action="http://120.26.222.134:9005/api/v1/Attachment/upload"
+          :action="baseUrl+'/api/v1/Attachment/upload'"
           :on-preview="handlePreview"
           :on-remove="handleRemove"
           :on-success="handleSucess"
@@ -96,7 +96,7 @@
       <el-table-column label="产品图片" align="center">
         <template slot-scope="scope">
           <el-upload
-            action="http://120.26.222.134:9005/api/v1/Attachment/upload"
+            :action="baseUrl+'/api/v1/Attachment/upload'"
             :on-preview="handlePreview"
             :on-remove="handleRemove"
             :on-success="handleListSucess"
@@ -107,18 +107,22 @@
             :file-list="fileList"
             :show-file-list="false"
           >
-            <el-button
-              v-if="!scope.row.picturePath"
-              size="mini"
-              type="primary"
-              @click="handleUpload(scope.row.id)"
-            >点击上传</el-button>
-            <img
-              v-if="scope.row.picturePath"
-              :src="scope.row.picturePath"
-              width="40"
-              @click="handleUpload(scope.row.id)"
-            >
+            <el-popover placement="top-start" width="200" trigger="hover">
+              <el-button
+                v-if="!scope.row.picturePath"
+                slot="reference"
+                size="mini"
+                type="primary"
+                @click="handleUpload(scope.row.id)"
+              >点击上传</el-button>
+              <img
+                v-if="scope.row.picturePath"
+                slot="reference"
+                :src="scope.row.picturePath"
+                width="40"
+                @click="handleUpload(scope.row.id)"
+              >
+            </el-popover>
           </el-upload>
         </template>
       </el-table-column>
@@ -149,8 +153,11 @@
           <span style="cursor: pointer;" @click="handleAsin(scope.row.asin)">{{ scope.row.asin }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="SKU" align="center">
+      <!-- <el-table-column label="SKU" align="center">
         <template slot-scope="scope">{{ scope.row.sku }}</template>
+      </el-table-column>-->
+      <el-table-column label="产品" align="center">
+        <template slot-scope="scope">{{ scope.row.name }}</template>
       </el-table-column>
       <el-table-column label="FNSKU" align="center">
         <template slot-scope="scope">{{ scope.row.fnsku }}</template>
@@ -235,32 +242,25 @@ export default {
     this._getStations();
     this._getExcelTypes();
     this._getLines();
+    this.baseUrl = process.env.VUE_APP_BASE_API;
   },
   methods: {
     handleAsin(value) {
-      // console.log(1)
       this.$router.push({ path: "/echarts/echarts", query: { asin: value }});
     },
     handleSizeChange() {},
     handleCurrentChange(page) {
-      // console.log(this.currentPage, page)
       this.fetchData();
     },
     handleImg(image) {
       this.srcList = [];
       this.srcList.push(image);
     },
-
     handleSearch() {
       this.currentPage = 1;
       this.fetchData();
     },
-    submitUpload() {
-      // setTimeout(()=>{
-      // })
-      // debugger;
-      // this.$refs.upload.submit();
-    },
+    submitUpload() {},
     handleRemove(file, fileList) {
       console.log(file, fileList);
     },
@@ -277,7 +277,7 @@ export default {
         });
       } else {
         this.$message.success("上传失败!");
-        console.log(a, b)
+        console.log(a, b);
         this.loading.close();
       }
     },

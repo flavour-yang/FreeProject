@@ -14,11 +14,12 @@ export default {
   },
   methods: {
     initOneEchart(options, dom) { // 放大后的echart
+      options.series = options.series.reverse()
       // const serie = options.series.splice(1, 1)
       // options.series.push(serie)
-      options.series = options.series.reverse()
-      var arr = options.series.pop()
-      options.series.unshift(arr)
+      // options.series = options.series.reverse()
+      // var arr = options.series.pop()
+      // options.series.unshift(arr)
       if (options.series.length > 1) {
         options.series.forEach(item => {
           if (item.name === 'natural order') {
@@ -88,10 +89,6 @@ export default {
             mark: {
               show: true
             },
-            // magicType: {
-            //   show: true,
-            //   type: ["line", "bar"]
-            // },
             restore: {
               show: true
             },
@@ -100,18 +97,6 @@ export default {
             }
           }
         },
-        // dataZoom: [
-        //   {
-        //     show: true,
-        //     realtime: true,
-        //     y: 50,
-        //     height: 16,
-        //     start: 0,
-        //     end: 100,
-        //     left: "10%",
-        //     width: "80%"
-        //   }
-        // ],
         xAxis: [
           {
             type: "category",
@@ -125,9 +110,7 @@ export default {
               lineStyle: {
                 type: "dashed"
               }
-            },
-            type: "value"
-            // name: ""
+            }
           }
         ],
         series: options.series,
@@ -137,6 +120,26 @@ export default {
       });
     },
     initDiffEchart(options, dom) { // 多asin,比较echart
+      options.series = options.series.reverse()
+      // options.series = options.series.reverse()
+      // var arr = options.series.pop()
+      // options.series.unshift(arr)
+      if (options.series.length > 1) {
+        options.series.forEach((item, index) => {
+          if (item.name === 'natural order') {
+            item['itemStyle'] = { color: '#91ca8c' }
+          }
+          if (item.name === 'ad order') {
+            item['itemStyle'] = { color: '#dd6b66' }
+          }
+          if (item.name === 'natural session') {
+            item['itemStyle'] = { color: '#91ca8c' }
+          }
+          if (item.name === 'ad session') {
+            item['itemStyle'] = { color: '#dd6b66' }
+          }
+        })
+      }
       const echart = echarts.init(dom, "light");
       // 绘制图表
       echart.setOption({
@@ -169,13 +172,12 @@ export default {
           formatter: function(params) {
             const obj = {}; let str = "";
             for (let i = 0; i < params.length; i++) {
-              if (obj[options.series[i].stack]) { // 存在则追加
-                obj[options.series[i].stack] += `${params[i].marker}${params[i].seriesName}: ${params[i].value}<br>`
+              if (obj[options.series[i].selfData]) { // 存在则追加
+                obj[options.series[i].selfData] += `${params[i].marker}${params[i].seriesName}: ${params[i].value}<br>`
               } else { // 不存在则赋值
-                obj[options.series[i].stack] = `${params[i].marker}${params[i].seriesName}: ${params[i].value}<br>`
+                obj[options.series[i].selfData] = `${params[i].marker}${params[i].seriesName}: ${params[i].value}<br>`
               }
             }
-            console.log(params)
             for (const key in obj) {
               str += `${key}<br> ${obj[key]}<br>`
             }
@@ -204,10 +206,6 @@ export default {
             mark: {
               show: true
             },
-            // magicType: {
-            //   show: true,
-            //   type: ["line", "bar"]
-            // },
             restore: {
               show: true
             },
@@ -216,18 +214,6 @@ export default {
             }
           }
         },
-        // dataZoom: [
-        //   {
-        //     show: true,
-        //     realtime: true,
-        //     y: 50,
-        //     height: 16,
-        //     start: 0,
-        //     end: 100,
-        //     left: "10%",
-        //     width: "80%"
-        //   }
-        // ],
         xAxis: [
           {
             type: "category",
@@ -252,10 +238,22 @@ export default {
         notMerge: true // 是否合并之前的图表
       });
     },
-    _getOneCharts(indicators, asin, dom) {
+    _getOneCharts(indicators, asin, dom) { // 点击小图表放大
       const start = this.pickerData[0] || this.startTime; const end = this.pickerData[1] || this.endTime
+      const indicatorsArr = [];
+      indicators.forEach(item => {
+        let str = "";
+        if (item.includes("广告")) {
+          str = item.slice(2, item.length)
+          str = "Ad" + str;
+          indicatorsArr.push(str)
+        } else {
+          str = item;
+          indicatorsArr.push(str)
+        }
+      })
       const params = {
-        indicators: indicators,
+        indicators: indicatorsArr,
         startTime: start,
         endTime: end,
         asins: asin
@@ -285,7 +283,6 @@ export default {
                 data: [],
                 type: "bar",
                 stack: "总数",
-                // barWidth: 20,
                 markLine: {
                   data: [
                     { type: 'average', name: '平均值' }
@@ -297,12 +294,15 @@ export default {
               }
               if (obj.chartType === "LineChart") {
                 serie.type = "line";
+                delete serie.stack
               }
               if (obj.chartType === "BarChart") {
                 serie.type = "bar";
+                delete serie.stack
               }
               if (obj.chartType === "StackedBarChart" && index === 0) {
                 serie.type = "line";
+                delete serie.stack
               }
               serie.data = item.values;
               obj.series.push(serie);
@@ -320,7 +320,7 @@ export default {
         }
       });
     },
-    _getMoreCharts(indicators, asin, dom) {
+    _getMoreCharts(indicators, asin, dom) { // 同asin
       //   debugger
       const start = this.pickerDataSameAsin[0] || this.startTime; const end = this.pickerDataSameAsin[1] || this.endTime
       const params = {
@@ -353,44 +353,43 @@ export default {
               }
             }
             obj.xValue = result
-            el.chartData.forEach((elChart, index) => {
-              const chartType = elChart.chartType;
-              const serie = {
-                name: [],
-                data: [],
-                type: "bar",
-                stack: elChart.indicator,
-                markLine: {
-                  data: [
-                    { type: 'average', name: '平均值' }
-                  ]
+            obj.name = el.indicator;
+            obj.chartType = el.chartData[0].chartType;
+            el.chartData.forEach((elChart) => {
+              elChart.data.forEach((item, index) => {
+                const serie = {
+                  name: item.yName,
+                  data: [],
+                  type: "bar",
+                  stack: el.indicator,
+                  markLine: {
+                    data: [
+                      { type: 'average', name: '平均值' }
+                    ]
+                  }
+                };
+                if (obj.chartType === "StackedBarChart") {
+                  serie.type = "bar";
                 }
-              };
-              if (chartType === "StackedBarChart") {
-                serie.type = "bar";
-              }
-              if (chartType === "LineChart") {
-                serie.type = "line";
-                delete serie.stack
-              }
-              if (chartType === "BarChart") {
-                serie.type = "bar";
-                delete serie.stack
-              }
-              if (chartType === "StackedBarChart" && index === 0) {
-                serie.type = "line";
-              }
-              // item.asin
-              elChart.data.forEach((item) => {
+                if (obj.chartType === "LineChart") {
+                  serie.type = "line";
+                  delete serie.stack
+                }
+                if (obj.chartType === "BarChart") {
+                  serie.type = "bar";
+                  delete serie.stack
+                }
+                if (obj.chartType === "StackedBarChart" && index === 0) {
+                  serie.type = "line";
+                  delete serie.stack
+                }
                 serie.data = item.values;
-                serie.name = item.yName
-                // serieList.push(serie)
-                // obj.yValue.push(item.values);
                 if (!obj.yName.includes(item.yName)) {
                   obj.yName.push(item.yName);
                 }
+                obj.series.push(serie);
+                obj.yValue.push(item.values);
               });
-              obj.series.push(serie);
             })
             console.log(obj)
             // el.chartData[0]
@@ -417,13 +416,9 @@ export default {
         asins: asin
       };
       getCharts(params).then(res => {
-        console.timeEnd("charts");
         const list = res.data;
         const echartList = [];
-        const tooltip = []
-        // "LineChart","StackedBarChart","BarChart"
         if (list && list.length) {
-          console.time();
           list.forEach(el => {
             const obj = {
               name: "",
@@ -446,27 +441,17 @@ export default {
             obj.name = el.indicator;
             obj.chartType = el.chartData[0].chartType;
             el.chartData.forEach(elChild => {
-              if (!tooltip.includes(elChild.asin)) {
-                tooltip.push(elChild.asin)
-              }
               elChild.data.forEach((item, index) => {
                 const serie = {
                   name: item.yName,
                   data: [],
                   type: 'bar',
                   stack: elChild.asin,
+                  selfData: elChild.asin,
                   markLine: {
                     data: [
                       { type: 'average', name: '平均值' }
                     ]
-                  },
-                  tooltip: {
-                    formatter: function(param) {
-                      param = param[0];
-                      return [
-                        param.name
-                      ].join('');
-                    }
                   }
                 };
                 if (obj.chartType === "StackedBarChart") {
@@ -474,12 +459,15 @@ export default {
                 }
                 if (obj.chartType === "LineChart") {
                   serie.type = "line";
+                  // delete serie.stack
                 }
                 if (obj.chartType === "BarChart") {
                   serie.type = "bar";
+                  // delete serie.stack
                 }
                 if (obj.chartType === "StackedBarChart" && index === 0) {
                   serie.type = "line";
+                  delete serie.stack
                 }
                 serie.data = item.values;
                 if (!obj.yName.includes(item.yName)) {
@@ -492,70 +480,19 @@ export default {
 
             echartList.push(obj);
           });
-          // list.forEach(el => {
-          //   const obj = {
-          //     name: "",
-          //     chartType: "",
-          //     xValue: [],
-          //     yValue: [],
-          //     yName: [],
-          //     series: []
-          //   };
-
-          //   el.chartData.forEach((elChart, index) => {
-          //     const chartType = elChart.chartType;
-          //     const serie = {
-          //       name: "",
-          //       data: [],
-          //       type: "bar",
-          //       stack: el.indicator,
-          //     };
-          //     if (chartType === "StackedBarChart") {
-          //       serie.type = "bar";
-          //     }
-          //     if (chartType === "LineChart") {
-          //       serie.type = "line";
-          //       delete serie.stack
-          //     }
-          //     if (chartType === "BarChart") {
-          //       serie.type = "bar";
-          //       delete serie.stack
-          //     }
-          //     if (chartType === "StackedBarChart" && index === 0) {
-          //       serie.type = "line";
-          //     }
-          //     // item.asin
-          //     const arr = []
-          //     elChart.data.forEach((item) => { //
-          //       serie.data = item.values;
-          //       serie.name = item.yName
-          //       console.log(serie.name)
-          //       // serieList.push(serie)
-          //       // obj.yValue.push(item.values);
-          //       // if (!obj.yName.includes(item.yName)) {
-          //       arr.push(item.yName)
-          //       obj.series.push(serie);
-          //       debugger
-          //       // }
-          //     });
-          //     obj.yName = arr;
-          //   })
-          //   // el.chartData[0]
-          //   echartList.push(obj);
-          // });
           this.differentAsinEchart = echartList
-          // echartList.ser
-          console.timeEnd();
           setTimeout(() => {
             const dom = document.querySelectorAll('.echarts-diff-asin')
             echartList.forEach((item, index) => {
               this.initDiffEchart(item, dom[index]);
-              // console.log(obj)
             });
           }, 20);
-          console.log('diff asin:', echartList)
         }
       });
     }
+    // swapArr(arr, index1, index2) {
+    //   arr[index1] = arr.splice(index2, 1, arr[index1])[0];
+    //   return arr;
+    // }
   }
 }
