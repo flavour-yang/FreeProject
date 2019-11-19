@@ -232,7 +232,6 @@ export default {
       });
     },
     _getOneCharts(indicators, asin, dom) {
-      //   debugger
       const start = this.pickerData[0] || this.startTime; const end = this.pickerData[1] || this.endTime
       const params = {
         indicators: indicators,

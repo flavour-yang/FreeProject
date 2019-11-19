@@ -340,7 +340,9 @@ export default {
         });
       }
     },
-    handleListError() {},
+    handleListError() {
+      this.$message.error("上传失败");
+    },
     fetchData() {
       this.listLoading = true;
       const params = {
