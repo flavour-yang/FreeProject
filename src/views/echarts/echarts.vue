@@ -258,7 +258,7 @@
             />
           </div>
         </div>
-        <div id="keyword_charts" style="flex: 1" />
+        <div id="keyword_charts" style="flex: 1;height: 50vh" />
       </div>
     </el-dialog>
     <el-dialog title="广告SearchTerm分析" :fullscreen="true" :visible.sync="dialogCampaign">
@@ -1180,7 +1180,7 @@ export default {
       const params = {
         StartTime: this.pickerDataKwtrend[0] || this.startTime,
         EndTime: this.pickerDataKwtrend[1] || this.endTime,
-        ASIN: [this.asin],
+        ASIN: this.asin,
         PageIndex: this.keyWordPageIndex,
         PageSize: this.keyWordPageSize
       };
