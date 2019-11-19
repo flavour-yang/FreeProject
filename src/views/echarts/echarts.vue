@@ -8,7 +8,7 @@
             <span style="color: #409EFF; cursor: pointer;" @click="goBack">返回</span>
             <p>
               <span style="font-weight: bold;">ASIN:</span>
-              <span class="asin-child" @click="chooseChildAsin(item)">{{ childAsin }}</span>
+              <span class="asin-child" @click="chooseChildAsin()">{{ childAsin }}</span>
             </p>
             <el-divider />
             <div>
@@ -235,14 +235,14 @@
         fit
         highlight-current-row
       >
-        <el-table-column label="keyword" align="center">
+        <el-table-column label="关键字" align="center">
           <template slot-scope="scope">{{ scope.row.keyword }}</template>
         </el-table-column>
-        <el-table-column label="searchNum" align="center">
-          <template slot-scope="scope">{{ scope.row.searchNum }}</template>
-        </el-table-column>
-        <el-table-column label="searchCapacity" align="center">
+        <el-table-column label="搜索容量" align="center">
           <template slot-scope="scope">{{ scope.row.searchCapacity }}</template>
+        </el-table-column>
+        <el-table-column label="搜索次数" align="center">
+          <template slot-scope="scope">{{ scope.row.searchNum }}</template>
         </el-table-column>
       </el-table>
     </el-dialog>
@@ -283,12 +283,12 @@
           size="medium"
         />
         <el-button type="primary" @click="showAdAnalysisReport">compare</el-button>
-        <el-button
+        <!-- <el-button
           v-show="ADList.length"
           type="primary"
           :loading="downloadLoading"
           @click="handleDownload"
-        >export</el-button>
+        >export</el-button> -->
       </div>
       <div class="block" style="margin:0 auto 10px; width:80%;" />
       <el-table
@@ -301,7 +301,7 @@
         type="index"
         highlight-current-row
         :cell-class-name="cellClass"
-        header-cell-class-name="self-header-cell"
+        :header-cell-class-name="headerRowClass"
       >
         <el-table-column label="searchterm" align="center">
           <template slot-scope="scope">
@@ -345,17 +345,17 @@
             <el-table-column width="36" label="Auto" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.auto && scope.row.columns1.clicks.auto.value }}</template>
+              >{{ scope.row.columns1.impressions.auto && scope.row.columns1.impressions.auto.value }}</template>
             </el-table-column>
             <el-table-column width="36" label="Broad" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.broad && scope.row.columns1.clicks.broad.value }}</template>
+              >{{ scope.row.columns1.impressions.broad && scope.row.columns1.impressions.broad.value }}</template>
             </el-table-column>
             <el-table-column width="36" label="Exat" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.exat && scope.row.columns1.clicks.exat.value }}</template>
+              >{{ scope.row.columns1.impressions.exat && scope.row.columns1.impressions.exat.value }}</template>
             </el-table-column>
           </el-table-column>
           <el-table-column label="Clicks" align="center">
@@ -394,78 +394,78 @@
             <el-table-column width="36" label="Auto" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.auto && scope.row.columns1.clicks.auto.value }}</template>
+              >{{ scope.row.columns1.spend.auto && scope.row.columns1.spend.auto.value }}</template>
             </el-table-column>
             <el-table-column width="36" label="Broad" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.broad && scope.row.columns1.clicks.broad.value }}</template>
+              >{{ scope.row.columns1.spend.broad && scope.row.columns1.spend.broad.value }}</template>
             </el-table-column>
             <el-table-column width="36" label="Exat" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.exat && scope.row.columns1.clicks.exat.value }}</template>
+              >{{ scope.row.columns1.spend.exat && scope.row.columns1.spend.exat.value }}</template>
             </el-table-column>
           </el-table-column>
           <el-table-column label="Unit Sold" align="center">
             <el-table-column width="36" label="Auto" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.auto && scope.row.columns1.clicks.auto.value }}</template>
+              >{{ scope.row.columns1.unitSold.auto && scope.row.columns1.unitSold.auto.value }}</template>
             </el-table-column>
             <el-table-column width="36" label="Broad" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.broad && scope.row.columns1.clicks.broad.value }}</template>
+              >{{ scope.row.columns1.unitSold.broad && scope.row.columns1.unitSold.broad.value }}</template>
             </el-table-column>
             <el-table-column width="36" label="Exat" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.exat && scope.row.columns1.clicks.exat.value }}</template>
+              >{{ scope.row.columns1.unitSold.exat && scope.row.columns1.unitSold.exat.value }}</template>
             </el-table-column>
           </el-table-column>
           <el-table-column label="CR" align="center">
             <el-table-column width="36" label="Auto" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.auto && scope.row.columns1.clicks.auto.value }}</template>
+              >{{ scope.row.columns1.cr.auto && scope.row.columns1.cr.auto.value && formatNum(scope.row.columns1.cr.auto.value) }}</template>
             </el-table-column>
             <el-table-column width="36" label="Broad" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.broad && scope.row.columns1.clicks.broad.value }}</template>
+              >{{ scope.row.columns1.cr.broad && scope.row.columns1.cr.broad.value && formatNum(scope.row.columns1.cr.broad.value) }}</template>
             </el-table-column>
             <el-table-column width="36" label="Exat" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.exat && scope.row.columns1.clicks.exat.value }}</template>
+              >{{ scope.row.columns1.cr.exat && scope.row.columns1.cr.exat.value && formatNum(scope.row.columns1.cr.exat.value) }}</template>
             </el-table-column>
             <el-table-column width="36" label="Total" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.total && scope.row.columns1.clicks.total.value }}</template>
+              >{{ scope.row.columns1.cr.total && scope.row.columns1.cr.total.value && formatNum(scope.row.columns1.cr.total.value) }}</template>
             </el-table-column>
           </el-table-column>
           <el-table-column label="Ctr" align="center">
             <el-table-column width="36" label="Auto" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.auto && scope.row.columns1.clicks.auto.value }}</template>
+              >{{ scope.row.columns1.ctr.auto && formatNum(scope.row.columns1.ctr.auto.value) }}</template>
             </el-table-column>
             <el-table-column width="36" label="Broad" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.broad && scope.row.columns1.clicks.broad.value }}</template>
+              >{{ scope.row.columns1.ctr.broad && formatNum(scope.row.columns1.ctr.broad.value) }}</template>
             </el-table-column>
             <el-table-column width="36" label="Exat" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.exat && scope.row.columns1.clicks.exat.value }}</template>
+              >{{ scope.row.columns1.ctr.exat && formatNum(scope.row.columns1.ctr.exat.value) }}</template>
             </el-table-column>
             <el-table-column width="36" label="Total" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns1.clicks.total && scope.row.columns1.clicks.total.value }}</template>
+              >{{ scope.row.columns1.ctr.total && formatNum(scope.row.columns1.ctr.total.value) }}</template>
             </el-table-column>
           </el-table-column>
         </el-table-column>
@@ -474,17 +474,17 @@
             <el-table-column width="36" label="Auto" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.auto && scope.row.columns2.clicks.auto.value }}</template>
+              >{{ scope.row.columns2.impressions.auto && scope.row.columns2.impressions.auto.value }}</template>
             </el-table-column>
             <el-table-column width="36" label="Broad" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.broad && scope.row.columns2.clicks.broad.value }}</template>
+              >{{ scope.row.columns2.impressions.broad && scope.row.columns2.impressions.broad.value }}</template>
             </el-table-column>
             <el-table-column width="36" label="Exat" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.exat && scope.row.columns2.clicks.exat.value }}</template>
+              >{{ scope.row.columns2.impressions.exat && scope.row.columns2.impressions.exat.value }}</template>
             </el-table-column>
           </el-table-column>
           <el-table-column label="Clicks" align="center">
@@ -508,79 +508,78 @@
             <el-table-column width="36" label="Auto" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.auto && scope.row.columns2.clicks.auto.value }}</template>
+              >{{ scope.row.columns2.spend.auto && scope.row.columns2.spend.auto.value }}</template>
             </el-table-column>
             <el-table-column width="36" label="Broad" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.broad && scope.row.columns2.clicks.broad.value }}</template>
+              >{{ scope.row.columns2.spend.broad && scope.row.columns2.spend.broad.value }}</template>
             </el-table-column>
             <el-table-column width="36" label="Exat" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.exat && scope.row.columns2.clicks.exat.value }}</template>
+              >{{ scope.row.columns2.spend.exat && scope.row.columns2.spend.exat.value }}</template>
             </el-table-column>
           </el-table-column>
           <el-table-column label="Unit Sold" align="center">
             <el-table-column width="36" label="Auto" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.auto && scope.row.columns2.clicks.auto.value }}</template>
+              >{{ scope.row.columns2.unitSold.auto && scope.row.columns2.unitSold.auto.value }}</template>
             </el-table-column>
             <el-table-column width="36" label="Broad" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.broad && scope.row.columns2.clicks.broad.value }}</template>
+              >{{ scope.row.columns2.unitSold.broad && scope.row.columns2.unitSold.broad.value }}</template>
             </el-table-column>
             <el-table-column width="36" label="Exat" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.exat && scope.row.columns2.clicks.exat.value }}</template>
+              >{{ scope.row.columns2.unitSold.exat && scope.row.columns2.unitSold.exat.value }}</template>
             </el-table-column>
           </el-table-column>
           <el-table-column label="CR" align="center">
             <el-table-column width="36" label="Auto" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.auto && scope.row.columns2.clicks.auto.value }}</template>
+              >{{ scope.row.columns2.cr.auto && scope.row.columns2.cr.auto.value&& formatNum(scope.row.columns2.cr.auto.value) }}</template>
             </el-table-column>
             <el-table-column width="36" label="Broad" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.broad && scope.row.columns2.clicks.broad.value }}</template>
+              >{{ scope.row.columns2.cr.broad && scope.row.columns2.cr.broad.value&& formatNum(scope.row.columns2.cr.broad.value) }}</template>
             </el-table-column>
             <el-table-column width="36" label="Exat" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.exat && scope.row.columns2.clicks.exat.value }}</template>
+              >{{ scope.row.columns2.cr.exat && scope.row.columns2.cr.exat.value&& formatNum(scope.row.columns2.cr.exat.value) }}</template>
             </el-table-column>
             <el-table-column width="36" label="Total" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.total && scope.row.columns2.clicks.total.value }}</template>
+              >{{ scope.row.columns2.cr.total && scope.row.columns2.cr.total.value&& formatNum(scope.row.columns2.cr.total.value) }}</template>
             </el-table-column>
           </el-table-column>
           <el-table-column label="Ctr" align="center">
             <el-table-column width="36" label="Auto" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.auto && scope.row.columns2.clicks.auto.value }}</template>
+              >{{ scope.row.columns2.ctr.auto && scope.row.columns2.ctr.auto.value &&formatNum(scope.row.columns2.ctr.auto.value ) }}</template>
             </el-table-column>
             <el-table-column width="36" label="Broad" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.broad && scope.row.columns2.clicks.broad.value }}</template>
+              >{{ scope.row.columns2.ctr.broad && scope.row.columns2.ctr.broad.value &&formatNum(scope.row.columns2.ctr.broad.value ) }}</template>
             </el-table-column>
             <el-table-column width="36" label="Exat" align="center">
               <template
                 slot-scope="scope"
-              >{{ scope.row.columns2.clicks.exat && scope.row.columns2.clicks.exat.value }}</template>
+              >{{ scope.row.columns2.ctr.exat && scope.row.columns2.ctr.exat.value &&formatNum(scope.row.columns2.ctr.exat.value ) }}</template>
             </el-table-column>
             <el-table-column width="36" label="Total" align="center">
               <template
                 slot-scope="scope"
-                style="padding: 0"
-              >{{ scope.row.columns2.clicks.total && scope.row.columns2.clicks.total.value }}</template>
+              >{{ scope.row.columns2.ctr.total && scope.row.columns2.ctr.total.value &&formatNum(scope.row.columns2.ctr.total.value ) }}</template>
             </el-table-column>
           </el-table-column>
         </el-table-column>
@@ -750,6 +749,32 @@ export default {
     window.removeEventListener("resize", this.resizeChart);
   },
   methods: {
+    headerRowClass({ row, column, rowIndex, columnIndex }) {
+      if (rowIndex === 0) {
+        if (columnIndex === 2) {
+          return "left-row";
+        }
+        if (columnIndex === 3) {
+          return "right-row";
+        }
+      }
+      if (rowIndex === 1) {
+        if (columnIndex < 6) {
+          return "left-row";
+        }
+        if (columnIndex >= 6) {
+          return "right-row";
+        }
+      }
+      if (rowIndex === 2) {
+        if (columnIndex < 20) {
+          return "left-row";
+        }
+        if (columnIndex >= 20) {
+          return "right-row";
+        }
+      }
+    },
     cellClass({ row, column, rowIndex, columnIndex }) {
       if (columnIndex > 1 && columnIndex < 22) {
         return "left-cell";
@@ -786,6 +811,12 @@ export default {
     },
     goBack() {
       this.$router.go(-1);
+    },
+    formatNum(value) {
+      if (Math.floor(value * 100) / 100 === 0) {
+        return "0";
+      }
+      return Math.floor(value * 100) / 100 + "%";
     },
     resizeChart() {
       // this.myChart.resize({
@@ -904,6 +935,25 @@ export default {
     },
     initEchart(options, dom) {
       const echart = echarts.init(dom, "light");
+      options.series = options.series.reverse();
+      var arr = options.series.pop();
+      options.series.unshift(arr);
+      if (options.series.length > 1) {
+        options.series.forEach(item => {
+          if (item.name === "natural order") {
+            item["itemStyle"] = { color: "#91ca8c" };
+          }
+          if (item.name === "ad order") {
+            item["itemStyle"] = { color: "#dd6b66" };
+          }
+          if (item.name === "natural session") {
+            item["itemStyle"] = { color: "#91ca8c" };
+          }
+          if (item.name === "ad session") {
+            item["itemStyle"] = { color: "#dd6b66" };
+          }
+        });
+      }
       echart.setOption({
         title: {
           text: options.name,
@@ -1229,7 +1279,7 @@ export default {
   .echart-content,
   .table-content {
     border-radius: 5px;
-    width: 290px;
+    width: 320px;
     height: 230px;
     box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
     margin: 10px;
@@ -1260,6 +1310,14 @@ export default {
   background: #67c23a;
   color: #fff;
 }
+/deep/ .el-table thead.is-group th.left-row {
+  background: #67c23a;
+  color: #fff;
+}
+/deep/ .el-table thead.is-group th.right-row {
+  background: #f56c6c;
+  color: #fff;
+}
 /deep/.el-table td.right-cell {
   background: #f56c6c;
   color: #fff;
@@ -1268,6 +1326,6 @@ export default {
   background: none;
 }
 /deep/.el-table--enable-row-hover .el-table__body tr:hover > td {
-  background-color: rgba(0, 0, 0, .2) !important;
+  background-color: rgba(0, 0, 0, 0.2) !important;
 }
 </style>
