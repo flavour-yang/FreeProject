@@ -20,6 +20,7 @@ export default {
       // options.series = options.series.reverse()
       // var arr = options.series.pop()
       // options.series.unshift(arr)
+      console.log(options)
       if (options.series.length > 1) {
         options.series.forEach(item => {
           if (item.name === 'natural order') {
@@ -34,6 +35,11 @@ export default {
           if (item.name === 'ad session') {
             item['itemStyle'] = { color: '#dd6b66' }
           }
+        })
+      }
+      if (options.name === 'UCR' || options.name === '广告CR') {
+        options.series[0].data.forEach((item, index) => {
+          options.series[0].data[index] = Math.round(item * 10000 / 100)
         })
       }
       const echart = echarts.init(dom, "light");
@@ -64,8 +70,26 @@ export default {
               textStyle: {
                 color: "#fff"
               }
+              // formatter: options.name === 'UCR' || options.name === '广告CR' ? '{value} %' : options.name === "Sales" || options.name === "广告Spend" ? '${value}' : '{value}'
             }
+          },
+          formatter: function(params) {
+            let symbol = ''
+            if (params[0].seriesName === 'UCR' || params[0].seriesName === 'ad CR') {
+              symbol = '%'
+            }
+            let str = params[0].axisValue + "<br>";
+            // console.log(params)
+            for (let i = 0; i < params.length; i++) {
+              if (options.name === 'Sales' || options.name === "广告Spend") {
+                str += `${params[i].marker}${params[i].seriesName}: $${params[i].value}<br>`
+              } else {
+                str += `${params[i].marker}${params[i].seriesName}: ${params[i].value} ${symbol}<br>`
+              }
+            }
+            return str
           }
+
         },
         legend: {
           top: "10%",
@@ -96,6 +120,7 @@ export default {
               show: true
             }
           }
+
         },
         xAxis: [
           {
@@ -110,6 +135,9 @@ export default {
               lineStyle: {
                 type: "dashed"
               }
+            },
+            axisLabel: {
+              formatter: options.name === 'UCR' || options.name === '广告CR' ? '{value} %' : options.name === "Sales" || options.name === "广告Spend" ? '${value}' : '{value}'
             }
           }
         ],
@@ -118,12 +146,21 @@ export default {
       }, {
         notMerge: true // 是否合并之前的图表
       });
+      echart.dispatchAction({ // 默认启动 toolbox 中 dataZoom 的刷选状态
+        type: "takeGlobalCursor",
+        key: "dataZoomSelect",
+        dataZoomSelectActive: true
+      })
     },
     initDiffEchart(options, dom) { // 多asin,比较echart
       options.series = options.series.reverse()
-      // options.series = options.series.reverse()
-      // var arr = options.series.pop()
-      // options.series.unshift(arr)
+      if (options.name === 'UCR' || options.name === 'AdCR') {
+        options.series.forEach((parent, parentIndex) => {
+          parent.data.forEach((item, index) => {
+            options.series[parentIndex].data[index] = Math.round(item * 10000 / 100)
+          })
+        })
+      }
       if (options.series.length > 1) {
         options.series.forEach((item, index) => {
           if (item.name === 'natural order') {
@@ -175,12 +212,19 @@ export default {
               if (obj[options.series[i].selfData]) { // 存在则追加
                 obj[options.series[i].selfData] += `${params[i].marker}${params[i].seriesName}: ${params[i].value}<br>`
               } else { // 不存在则赋值
-                obj[options.series[i].selfData] = `${params[i].marker}${params[i].seriesName}: ${params[i].value}<br>`
+                if (options.name === 'Sales' || options.name === "AdSpend") {
+                  obj[options.series[i].selfData] = `${params[i].marker}${params[i].seriesName}: $${params[i].value}<br>`
+                } else if (options.name === 'UCR' || options.name === 'AdCR') {
+                  obj[options.series[i].selfData] = `${params[i].marker}${params[i].seriesName}: ${params[i].value}%<br>`
+                } else {
+                  obj[options.series[i].selfData] = `${params[i].marker}${params[i].seriesName}: ${params[i].value}<br>`
+                }
               }
             }
             for (const key in obj) {
               str += `${key}<br> ${obj[key]}<br>`
             }
+
             return str
           }
         },
@@ -228,6 +272,9 @@ export default {
                 type: "dashed"
               }
             },
+            axisLabel: {
+              formatter: options.name === 'UCR' || options.name === '广告CR' ? '{value} %' : options.name === "Sales" || options.name === "广告Spend" ? '${value}' : '{value}'
+            },
             type: "value"
             // name: ""
           }
@@ -274,8 +321,15 @@ export default {
               yName: [],
               series: []
             };
+            let str = "";
+            if (el.indicator.includes("Ad")) {
+              str = el.indicator.slice(2, el.indicator.length);
+              str = "广告" + str;
+            } else {
+              str = el.indicator;
+            }
             obj.xValue = el.xNames;
-            obj.name = el.indicator;
+            obj.name = str;
             obj.chartType = el.chartData[0].chartType;
             el.chartData[0].data.forEach((item, index) => {
               const serie = {
@@ -448,6 +502,7 @@ export default {
                   type: 'bar',
                   stack: elChild.asin,
                   selfData: elChild.asin,
+                  barCategoryGap: '50%',
                   markLine: {
                     data: [
                       { type: 'average', name: '平均值' }
@@ -459,6 +514,7 @@ export default {
                 }
                 if (obj.chartType === "LineChart") {
                   serie.type = "line";
+                  delete serie.barCategoryGap
                   // delete serie.stack
                 }
                 if (obj.chartType === "BarChart") {
@@ -468,6 +524,7 @@ export default {
                 if (obj.chartType === "StackedBarChart" && index === 0) {
                   serie.type = "line";
                   delete serie.stack
+                  delete serie.barCategoryGap
                 }
                 serie.data = item.values;
                 if (!obj.yName.includes(item.yName)) {

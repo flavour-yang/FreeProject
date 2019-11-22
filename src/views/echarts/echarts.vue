@@ -11,6 +11,16 @@
               <span class="asin-child" @click="chooseChildAsin()">{{ childAsin }}</span>
             </p>
             <el-divider />
+            <p
+              v-for="(key,index) of product"
+              v-if="key.asin === asin"
+              :key="index"
+              style="display: flex; align-items: center;"
+            >
+              <span>{{ key.asin }}</span>
+              <img width="40" style="margin-left: 20px" :src="key.src">
+            </p>
+            <el-divider />
             <div>
               <span style="font-weight: bold;">Parent ASIN:</span>
               <span
@@ -28,31 +38,44 @@
             </p>
             <p>
               近30天UCR:
-              <span>{{ recentData.ucr }}</span>
+              <span>{{ recentData.ucr }}%</span>
             </p>
             <p>
               近30天退货率:
-              <span>{{ recentData.refundRate }}</span>
+              <span>{{ recentData.refundRate }}%</span>
             </p>
             <p>
               近30天销售额:
-              <span>{{ recentData.sales }}</span>
+              <span>${{ recentData.sales }}</span>
             </p>
             <p>
               近30天花费:
-              <span>{{ recentData.spends }}</span>
+              <span>${{ recentData.spends }}</span>
             </p>
           </div>
         </el-card>
       </el-aside>
       <el-container>
         <el-header height="120px">
-          <div class="header-cascader" style>
+          <div>
+            <el-tag
+              v-for="(item, index) in asinList"
+              :key="index"
+              :effect="asin === item ? 'dark':'plain'"
+              closable
+              :disable-transitions="false"
+              style="cursor: pointer;"
+              @click="handleClick(item)"
+              @close="handleClose(item)"
+            >{{ item }}</el-tag>
+          </div>
+          <div class="header-cascader">
             <div class="block">
               <span class="demonstration">同一asin指标对比</span>
               <div>
                 <el-cascader
                   v-model="sameAsin"
+                  filterable
                   :options="options"
                   :props="{ multiple: true}"
                   collapse-tags
@@ -73,18 +96,6 @@
                 <el-button type="primary" @click="showDiffAsinComparison">compare</el-button>
               </div>
             </div>
-            <!-- <div class="block">
-              <span class="demonstration">不同asin不同指标对比</span>
-              <div>
-                <el-cascader
-                  :options="differentAsinIndicatorOptions"
-                  :props="{ multiple: true}"
-                  collapse-tags
-                  clearable
-                />
-                <el-button type="primary">compare</el-button>
-              </div>
-            </div>-->
           </div>
         </el-header>
         <el-main style="padding-top: 0">
@@ -130,6 +141,7 @@
         <el-cascader
           v-model="sameAsin"
           :options="options"
+          filterable
           :props="{ multiple: true}"
           collapse-tags
           clearable
@@ -157,6 +169,7 @@
       <div class="block" style="margin:0 auto 10px; width:80%;">
         <el-cascader
           v-model="asinIndicator"
+          filterable
           :options="differentAsinOptions"
           :props="{ multiple: true}"
           collapse-tags
@@ -298,12 +311,7 @@
           size="medium"
         />
         <el-button type="primary" @click="showAdAnalysisReport">compare</el-button>
-        <!-- <el-button
-          v-show="ADList.length"
-          type="primary"
-          :loading="downloadLoading"
-          @click="handleDownload"
-        >export</el-button>-->
+        <el-button v-show="ADList.length" type="primary" @click="handleDownload">export</el-button>
       </div>
       <div class="block" style="margin:0 auto 10px; width:80%;" />
       <el-table
@@ -357,19 +365,40 @@
             >添加备注</el-button>
           </template>
         </el-table-column>
-        <el-table-column label="列表1" align="center">
+        <el-table-column :label="pickerDataFirstTime[0]+'-'+pickerDataFirstTime[1]" align="center">
           <el-table-column label="Impressions" align="center">
-            <el-table-column width="36" label="Auto" align="center">
+            <el-table-column
+              width="36"
+              label="Auto"
+              :sort-method="sortColumn1ImpressionsAuto"
+              prop="value"
+              sortable
+              align="center"
+            >
               <template
                 slot-scope="scope"
               >{{ scope.row.columns1.impressions.auto && scope.row.columns1.impressions.auto.value }}</template>
             </el-table-column>
-            <el-table-column width="36" label="Broad" align="center">
+            <el-table-column
+              width="36"
+              label="Broad"
+              :sort-method="sortColumn1ImpressionsBroad"
+              prop="value"
+              sortable
+              align="center"
+            >
               <template
                 slot-scope="scope"
               >{{ scope.row.columns1.impressions.broad && scope.row.columns1.impressions.broad.value }}</template>
             </el-table-column>
-            <el-table-column width="36" label="Exat" align="center">
+            <el-table-column
+              width="36"
+              label="Exat"
+              :sort-method="sortColumn1ImpressionsExat"
+              prop="value"
+              sortable
+              align="center"
+            >
               <template
                 slot-scope="scope"
               >{{ scope.row.columns1.impressions.exat && scope.row.columns1.impressions.exat.value }}</template>
@@ -489,7 +518,10 @@
             </el-table-column>
           </el-table-column>
         </el-table-column>
-        <el-table-column label="列表2" align="center">
+        <el-table-column
+          :label="pickerDataSecondTime[0]+'-'+pickerDataSecondTime[1]"
+          align="center"
+        >
           <el-table-column label="Impressions" align="center">
             <el-table-column width="36" label="Auto" align="center">
               <template
@@ -646,7 +678,7 @@ import {
 } from "@/api/table";
 import { parseTime } from "@/utils";
 import mixin from "./mixin.js";
-
+import { mapGetters } from "vuex";
 export default {
   mixins: [mixin],
   data() {
@@ -657,13 +689,14 @@ export default {
       pickerDataSameAsin: "",
       pickerDataRma: "",
       pickerDataKwtrend: "",
-      pickerDataFirstTime: "",
-      pickerDataSecondTime: "",
+      pickerDataFirstTime: ["", ""],
+      pickerDataSecondTime: ["", ""],
       startTime: "",
       endTime: "",
       asin: "",
       childAsin: "",
       campaignValue: "",
+      loadingPage: "",
       dialogVisible: false,
       dialogComparison: false,
       dialogRma: false,
@@ -746,6 +779,9 @@ export default {
       ]
     };
   },
+  computed: {
+    ...mapGetters(["asinList", "product"])
+  },
   watch: {
     pickerData(val) {
       const dom = document.getElementById("echart");
@@ -770,7 +806,12 @@ export default {
   },
   mounted() {
     console.time("charts");
-
+    this.loadingPage = this.$loading({
+      lock: true,
+      text: "Loading",
+      spinner: "el-icon-loading",
+      background: "rgba(0, 0, 0, 0.7)"
+    });
     const start = new Date();
     const end = new Date(start.getTime() - 3600 * 1000 * 24 * 30);
     this.endTime = `${start.getFullYear()}-${start.getMonth() +
@@ -790,6 +831,40 @@ export default {
     window.removeEventListener("resize", this.resizeChart);
   },
   methods: {
+    handleClick(value) {
+      this.asin = value;
+      this.childAsin = value;
+      this._getRecent(value);
+      this._getCharts(value);
+      this._getParentASIN(value);
+    },
+    handleClose(value) {
+      this.$store.commit("table/REMOVE_ASIN", value);
+      const list = this.$store.state.table.asinList;
+      if (list.length) {
+        const asin = list[list.length - 1];
+        this.asin = asin;
+        this.childAsin = asin;
+        this._getRecent(asin);
+        this._getCharts(asin);
+        this._getParentASIN(asin);
+      }
+    },
+    sortColumn1ImpressionsAuto(a, b) {
+      return (
+        a.columns1.impressions.auto.value - b.columns1.impressions.auto.value
+      );
+    },
+    sortColumn1ImpressionsBroad(a, b) {
+      return (
+        a.columns1.impressions.broad.value - b.columns1.impressions.broad.value
+      );
+    },
+    sortColumn1ImpressionsExat(a, b) {
+      return (
+        a.columns1.impressions.exat.value - b.columns1.impressions.exat.value
+      );
+    },
     headerRowClass({ row, column, rowIndex, columnIndex }) {
       if (rowIndex === 0) {
         if (columnIndex === 2) {
@@ -834,8 +909,20 @@ export default {
     handleDownload() {
       this.downloadLoading = true;
       import("@/utils/ExportExcel").then(excel => {
-        const tHeader = ["searchterm", "remark", "Auto", "Broad", "Exat"];
-        const filterVal = ["searchterm", "remark", "Auto", "Broad", "Exat"];
+        const tHeader = [
+          "customerSearchTerm",
+          "remark",
+          "column1",
+          "Broad",
+          "Exat"
+        ];
+        const filterVal = [
+          "customerSearchTerm",
+          "remark",
+          "column1",
+          "Broad",
+          "Exat"
+        ];
         const data = this.formatJson(filterVal, this.ADList);
         excel.export_json_to_excel({
           header: tHeader,
@@ -982,7 +1069,7 @@ export default {
     },
     initEchart(options, dom) {
       const echart = echarts.init(dom, "light");
-      options.series = options.series.reverse()
+      options.series = options.series.reverse();
       // options.series = options.series.reverse();
       // var arr = options.series.pop();
       // options.series.unshift(arr);
@@ -1000,6 +1087,11 @@ export default {
           if (item.name === "ad session") {
             item["itemStyle"] = { color: "#dd6b66" };
           }
+        });
+      }
+      if (options.name === "UCR" || options.name === "广告CR") {
+        options.series[0].data.forEach((item, index) => {
+          options.series[0].data[index] = Math.round((item * 10000) / 100);
         });
       }
       echart.setOption(
@@ -1029,6 +1121,25 @@ export default {
                   color: "#fff"
                 }
               }
+            },
+            formatter: function(params) {
+              let symbol = "";
+              if (
+                params[0].seriesName === "UCR" ||
+                params[0].seriesName === "ad CR"
+              ) {
+                symbol = "%";
+              }
+              let str = params[0].axisValue + "<br>";
+              // console.log(params)
+              for (let i = 0; i < params.length; i++) {
+                if (options.name === "Sales" || options.name === "广告Spend") {
+                  str += `${params[i].marker}${params[i].seriesName}: $${params[i].value}<br>`;
+                } else {
+                  str += `${params[i].marker}${params[i].seriesName}: ${params[i].value} ${symbol}<br>`;
+                }
+              }
+              return str;
             }
           },
           legend: {
@@ -1039,7 +1150,7 @@ export default {
             // 图标位置调整
             bottom: "10%",
             top: "30%",
-            left: "10%",
+            left: "13%",
             right: "4%"
           },
           xAxis: [
@@ -1056,8 +1167,14 @@ export default {
                   type: "dashed"
                 }
               },
-              type: "value"
-              // name: ""
+              axisLabel: {
+                formatter:
+                  options.name === "UCR" || options.name === "广告CR"
+                    ? "{value} %"
+                    : options.name === "Sales" || options.name === "广告Spend"
+                      ? "${value}"
+                      : "{value}"
+              }
             }
           ],
           series: options.series,
@@ -1152,6 +1269,7 @@ export default {
             echartList.forEach((item, index) => {
               this.initEchart(item, this.domEchart[index]);
             });
+            this.loadingPage.close();
           }, 20);
           this._getAllAsin();
         }
@@ -1380,7 +1498,7 @@ export default {
   height: 500px;
 }
 .echarts-diff-asin {
-  width: 40%;
+  width: 48%;
   display: inline-block;
   height: 430px;
 }

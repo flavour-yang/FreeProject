@@ -150,7 +150,7 @@
       </el-table-column>-->
       <el-table-column label="ASIN" align="center">
         <template slot-scope="scope">
-          <span style="cursor: pointer;" @click="handleAsin(scope.row.asin)">{{ scope.row.asin }}</span>
+          <span style="cursor: pointer;" @click="handleAsin(scope.row)">{{ scope.row.asin }}</span>
         </template>
       </el-table-column>
       <!-- <el-table-column label="SKU" align="center">
@@ -245,8 +245,17 @@ export default {
     this.baseUrl = process.env.VUE_APP_BASE_API;
   },
   methods: {
-    handleAsin(value) {
-      this.$router.push({ path: "/echarts/echarts", query: { asin: value }});
+    handleAsin({ asin, picturePath, name }) {
+      this.$store.commit("table/SET_ASIN", asin);
+      this.$store.commit("table/SET_PRODUCT", {
+        asin: asin,
+        src: picturePath,
+        name: name
+      });
+      this.$router.push({
+        path: "/echarts/echarts",
+        query: { asin: asin }
+      });
     },
     handleSizeChange() {},
     handleCurrentChange(page) {
