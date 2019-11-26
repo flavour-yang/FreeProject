@@ -43,12 +43,12 @@
           :on-error="handleError"
           :before-upload="beforeUpload"
           :file-list="fileList"
-          :disabled="(excelValue && stationValue) ? false : true"
+          :disabled="excelValue === 'Product' ? false : (excelValue && stationValue) ? false : true"
           :show-file-list="false"
         >
           <el-button
             slot="trigger"
-            :disabled="(excelValue && stationValue) ? false : true"
+            :disabled="excelValue === 'Product' ? false : (excelValue && stationValue) ? false : true"
             size="small"
             type="primary"
           >上传产品</el-button>

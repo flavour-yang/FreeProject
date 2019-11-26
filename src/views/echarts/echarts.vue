@@ -75,7 +75,6 @@
               <div>
                 <el-cascader
                   v-model="sameAsin"
-                  filterable
                   :options="options"
                   :props="{ multiple: true}"
                   collapse-tags
@@ -147,6 +146,7 @@
           clearable
           size="medium"
           style="width: 80%"
+          @change="sameAsinChange"
         />
         <el-button size="medium" type="primary" @click="handleSameAsin">compare</el-button>
       </div>
@@ -727,14 +727,14 @@ export default {
       differentAsinEchart: [],
       campaignNameList: [],
       options: [
-        { value: "Sales", label: "Sales" },
-        { value: "Order", label: "Order" },
-        { value: "UCR", label: "UCR" },
-        { value: "Session", label: "Session" },
-        { value: "AdSpend", label: "AdSpend" },
-        { value: "AdClicks", label: "AdClicks" },
-        { value: "AdOrder", label: "AdOrder" },
-        { value: "AdCR", label: "AdCR" }
+        { value: "Sales", label: "Sales", disabled: false },
+        { value: "Order", label: "Order", disabled: false },
+        { value: "UCR", label: "UCR", disabled: false },
+        { value: "Session", label: "Session", disabled: false },
+        { value: "AdSpend", label: "AdSpend", disabled: false },
+        { value: "AdClicks", label: "AdClicks", disabled: false },
+        { value: "AdOrder", label: "AdOrder", disabled: false },
+        { value: "AdCR", label: "AdCR", disabled: false }
       ],
       pickerOptions: {
         shortcuts: [
@@ -831,6 +831,25 @@ export default {
     window.removeEventListener("resize", this.resizeChart);
   },
   methods: {
+    sameAsinChange(value) {
+      if (value.length >= 2) {
+        const arr = value.flat(Infinity);
+        const list = this.options;
+        // debugger
+        list.forEach(el => {
+          if (!arr.includes(el.value)) {
+            el.disabled = true;
+          }
+        });
+        this.options = list;
+      } else {
+        this.options.forEach(el => {
+          el.disabled = false;
+        });
+      }
+      // if(_cascader)
+      // debugger
+    },
     handleClick(value) {
       this.asin = value;
       this.childAsin = value;
@@ -1088,6 +1107,7 @@ export default {
             item["itemStyle"] = { color: "#dd6b66" };
           }
         });
+        // options.series[0]['yAxisIndex'] = 1
       }
       if (options.name === "UCR" || options.name === "广告CR") {
         options.series[0].data.forEach((item, index) => {
@@ -1174,6 +1194,12 @@ export default {
                     : options.name === "Sales" || options.name === "广告Spend"
                       ? "${value}"
                       : "{value}"
+              }
+            },
+            {
+              type: "value",
+              axisLabel: {
+                formatter: "{value}"
               }
             }
           ],
@@ -1335,6 +1361,7 @@ export default {
             data: [],
             type: "bar",
             stack: "总数"
+            // barCategoryGap: '100%'
           };
           if (obj.chartType === "StackedBarChart") {
             serie.type = "bar";
@@ -1342,6 +1369,7 @@ export default {
           if (obj.chartType === "LineChart") {
             serie.type = "line";
             delete serie.stack;
+            delete serie.barCategoryGap;
           }
           if (obj.chartType === "BarChart") {
             serie.type = "bar";
@@ -1350,6 +1378,7 @@ export default {
           if (obj.chartType === "StackedBarChart" && index === 0) {
             serie.type = "line";
             delete serie.stack;
+            delete serie.barCategoryGap;
           }
           serie.data = item.values;
           obj.series.push(serie);

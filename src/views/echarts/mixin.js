@@ -337,6 +337,7 @@ export default {
                 data: [],
                 type: "bar",
                 stack: "总数",
+                barCategoryGap: '50%',
                 markLine: {
                   data: [
                     { type: 'average', name: '平均值' }
@@ -349,6 +350,7 @@ export default {
               if (obj.chartType === "LineChart") {
                 serie.type = "line";
                 delete serie.stack
+                delete serie.barCategoryGap
               }
               if (obj.chartType === "BarChart") {
                 serie.type = "bar";
@@ -357,6 +359,7 @@ export default {
               if (obj.chartType === "StackedBarChart" && index === 0) {
                 serie.type = "line";
                 delete serie.stack
+                delete serie.barCategoryGap
               }
               serie.data = item.values;
               obj.series.push(serie);
@@ -397,7 +400,7 @@ export default {
             yName: [],
             series: []
           };
-          list.forEach(el => {
+          list.forEach((el, parentIndex) => {
             const result = [];
             const objchild = {};
             for (const i of el.xNames) {
@@ -410,24 +413,29 @@ export default {
             obj.name = el.indicator;
             obj.chartType = el.chartData[0].chartType;
             el.chartData.forEach((elChart) => {
+              // console.log(parentIndex)
               elChart.data.forEach((item, index) => {
                 const serie = {
                   name: item.yName,
                   data: [],
                   type: "bar",
                   stack: el.indicator,
+                  yAxisIndex: parentIndex,
+                  barCategoryGap: '50%',
                   markLine: {
                     data: [
                       { type: 'average', name: '平均值' }
                     ]
                   }
                 };
+                console.log(serie)
                 if (obj.chartType === "StackedBarChart") {
                   serie.type = "bar";
                 }
                 if (obj.chartType === "LineChart") {
                   serie.type = "line";
                   delete serie.stack
+                  delete serie.barCategoryGap
                 }
                 if (obj.chartType === "BarChart") {
                   serie.type = "bar";
@@ -436,6 +444,7 @@ export default {
                 if (obj.chartType === "StackedBarChart" && index === 0) {
                   serie.type = "line";
                   delete serie.stack
+                  delete serie.barCategoryGap
                 }
                 serie.data = item.values;
                 if (!obj.yName.includes(item.yName)) {
@@ -445,7 +454,6 @@ export default {
                 obj.yValue.push(item.values);
               });
             })
-            console.log(obj)
             // el.chartData[0]
             // echartList.push(obj);
           });
