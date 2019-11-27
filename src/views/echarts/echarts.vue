@@ -86,6 +86,7 @@
               <span class="demonstration">不同asin指标对比</span>
               <div>
                 <el-cascader
+                  v-model="asinIndicator"
                   :options="differentAsinOptions"
                   :props="{ multiple: true}"
                   collapse-tags
@@ -366,45 +367,31 @@
         </el-table-column>
         <el-table-column :label="pickerDataFirstTime[0]+'-'+pickerDataFirstTime[1]" align="center">
           <el-table-column label="Impressions" align="center">
-            <el-table-column
-              width="36"
-              label="Auto"
-              :sort-method="sortColumn1ImpressionsAuto"
-              prop="value"
-              sortable
-              align="center"
-            >
+            <el-table-column width="36" label="Auto" prop="value" align="center">
               <template
                 slot-scope="scope"
               >{{ scope.row.columns1.impressions.auto && scope.row.columns1.impressions.auto.value }}</template>
             </el-table-column>
-            <el-table-column
-              width="36"
-              label="Broad"
-              :sort-method="sortColumn1ImpressionsBroad"
-              prop="value"
-              sortable
-              align="center"
-            >
+            <el-table-column width="36" label="Broad" prop="value" align="center">
               <template
                 slot-scope="scope"
               >{{ scope.row.columns1.impressions.broad && scope.row.columns1.impressions.broad.value }}</template>
             </el-table-column>
-            <el-table-column
-              width="36"
-              label="Exat"
-              :sort-method="sortColumn1ImpressionsExat"
-              prop="value"
-              sortable
-              align="center"
-            >
+            <el-table-column width="36" label="Exat" prop="value" align="center">
               <template
                 slot-scope="scope"
               >{{ scope.row.columns1.impressions.exat && scope.row.columns1.impressions.exat.value }}</template>
             </el-table-column>
           </el-table-column>
           <el-table-column label="Clicks" align="center">
-            <el-table-column width="60" label="Auto" align="center">
+            <el-table-column
+              :sort-method="sortColumn1ClickAuto"
+              sortable
+              width="60"
+              prop="value"
+              label="Auto"
+              align="center"
+            >
               <template slot-scope="scope">
                 {{ scope.row.columns1.clicks.auto && scope.row.columns1.clicks.auto.value }}
                 <el-button
@@ -415,7 +402,14 @@
                 >{{ scope.row.columns1.clicks.auto && (scope.row.columns1.clicks.auto.sign ? 'undo' : 'Neg') }}</el-button>
               </template>
             </el-table-column>
-            <el-table-column width="60" label="Broad" align="center">
+            <el-table-column
+              :sort-method="sortColumn1ClickBroad"
+              sortable
+              width="60"
+              prop="value"
+              label="Broad"
+              align="center"
+            >
               <template slot-scope="scope">
                 {{ scope.row.columns1.clicks.broad && scope.row.columns1.clicks.broad.value }}
                 <el-button
@@ -426,7 +420,14 @@
                 >{{ scope.row.columns1.clicks.broad && (scope.row.columns1.clicks.broad.sign ? 'undo' : 'Neg') }}</el-button>
               </template>
             </el-table-column>
-            <el-table-column width="60" label="Exat" align="center">
+            <el-table-column
+              :sort-method="sortColumn1ClickExat"
+              sortable
+              prop="value"
+              width="60"
+              label="Exat"
+              align="center"
+            >
               <template slot-scope="scope">
                 {{ scope.row.columns1.clicks.exat && scope.row.columns1.clicks.exat.value }}
                 <el-button
@@ -456,17 +457,36 @@
             </el-table-column>
           </el-table-column>
           <el-table-column label="Unit Sold" align="center">
-            <el-table-column width="36" label="Auto" align="center">
+            <el-table-column
+              :sort-method="sortColumn1UnitAuto"
+              sortable
+              prop="value"
+              width="36"
+              label="Auto"
+              align="center"
+            >
               <template
                 slot-scope="scope"
               >{{ scope.row.columns1.unitSold.auto && scope.row.columns1.unitSold.auto.value }}</template>
             </el-table-column>
-            <el-table-column width="36" label="Broad" align="center">
+            <el-table-column
+              :sort-method="sortColumn1UnitBroad"
+              sortable
+              width="36"
+              label="Broad"
+              align="center"
+            >
               <template
                 slot-scope="scope"
               >{{ scope.row.columns1.unitSold.broad && scope.row.columns1.unitSold.broad.value }}</template>
             </el-table-column>
-            <el-table-column width="36" label="Exat" align="center">
+            <el-table-column
+              :sort-method="sortColumn1UnitExat"
+              sortable
+              width="36"
+              label="Exat"
+              align="center"
+            >
               <template
                 slot-scope="scope"
               >{{ scope.row.columns1.unitSold.exat && scope.row.columns1.unitSold.exat.value }}</template>
@@ -539,7 +559,7 @@
             </el-table-column>
           </el-table-column>
           <el-table-column label="Clicks" align="center">
-            <el-table-column width="60" label="Auto" align="center">
+            <el-table-column :sort-method="sortColumn2ClickAuto" sortable width="60" label="Auto" align="center">
               <template slot-scope="scope">
                 {{ scope.row.columns2.clicks.auto && scope.row.columns2.clicks.auto.value }}
                 <el-button
@@ -550,7 +570,7 @@
                 >{{ scope.row.columns2.clicks.auto && (scope.row.columns2.clicks.auto.sign ? 'undo' : 'Neg') }}</el-button>
               </template>
             </el-table-column>
-            <el-table-column width="60" label="Broad" align="center">
+            <el-table-column :sort-method="sortColumn2ClickBroad" sortable width="60" label="Broad" align="center">
               <template slot-scope="scope">
                 {{ scope.row.columns2.clicks.broad && scope.row.columns2.clicks.broad.value }}
                 <el-button
@@ -561,7 +581,7 @@
                 >{{ scope.row.columns2.clicks.broad && (scope.row.columns2.clicks.broad.sign ? 'undo' : 'Neg') }}</el-button>
               </template>
             </el-table-column>
-            <el-table-column width="60" label="Exat" align="center">
+            <el-table-column :sort-method="sortColumn2ClickExat" sortable width="60" label="Exat" align="center">
               <template slot-scope="scope">
                 {{ scope.row.columns2.clicks.exat && scope.row.columns2.clicks.exat.value }}
                 <el-button
@@ -591,17 +611,17 @@
             </el-table-column>
           </el-table-column>
           <el-table-column label="Unit Sold" align="center">
-            <el-table-column width="36" label="Auto" align="center">
+            <el-table-column :sort-method="sortColumn2UnitAuto" sortable width="36" label="Auto" align="center">
               <template
                 slot-scope="scope"
               >{{ scope.row.columns2.unitSold.auto && scope.row.columns2.unitSold.auto.value }}</template>
             </el-table-column>
-            <el-table-column width="36" label="Broad" align="center">
+            <el-table-column :sort-method="sortColumn2UnitBroad" sortable width="36" label="Broad" align="center">
               <template
                 slot-scope="scope"
               >{{ scope.row.columns2.unitSold.broad && scope.row.columns2.unitSold.broad.value }}</template>
             </el-table-column>
-            <el-table-column width="36" label="Exat" align="center">
+            <el-table-column :sort-method="sortColumn2UnitExat" sortable width="36" label="Exat" align="center">
               <template
                 slot-scope="scope"
               >{{ scope.row.columns2.unitSold.exat && scope.row.columns2.unitSold.exat.value }}</template>
@@ -736,6 +756,16 @@ export default {
         { value: "AdOrder", label: "AdOrder", disabled: false },
         { value: "AdCR", label: "AdCR", disabled: false }
       ],
+      options2: [
+        { value: "Sales", label: "Sales" },
+        { value: "Order", label: "Order" },
+        { value: "UCR", label: "UCR" },
+        { value: "Session", label: "Session" },
+        { value: "AdSpend", label: "AdSpend" },
+        { value: "AdClicks", label: "AdClicks" },
+        { value: "AdOrder", label: "AdOrder" },
+        { value: "AdCR", label: "AdCR" }
+      ],
       pickerOptions: {
         shortcuts: [
           {
@@ -869,20 +899,42 @@ export default {
         this._getParentASIN(asin);
       }
     },
-    sortColumn1ImpressionsAuto(a, b) {
-      return (
-        a.columns1.impressions.auto.value - b.columns1.impressions.auto.value
-      );
+    sortColumn1ClickAuto(a, b) {
+      return a.columns1.clicks.auto.value - b.columns1.clicks.auto.value;
     },
-    sortColumn1ImpressionsBroad(a, b) {
-      return (
-        a.columns1.impressions.broad.value - b.columns1.impressions.broad.value
-      );
+    sortColumn1ClickBroad(a, b) {
+      return a.columns1.clicks.broad.value - b.columns1.clicks.broad.value;
     },
-    sortColumn1ImpressionsExat(a, b) {
-      return (
-        a.columns1.impressions.exat.value - b.columns1.impressions.exat.value
-      );
+    sortColumn1ClickExat(a, b) {
+      return a.columns1.clicks.exat.value - b.columns1.clicks.exat.value;
+    },
+    sortColumn1UnitAuto(a, b) {
+      return a.columns1.unitSold.auto.value - b.columns1.unitSold.auto.value;
+    },
+    sortColumn1UnitBroad(a, b) {
+      return a.columns1.unitSold.broad.value - b.columns1.unitSold.broad.value;
+    },
+    sortColumn1UnitExat(a, b) {
+      return a.columns1.unitSold.exat.value - b.columns1.unitSold.exat.value;
+    },
+
+    sortColumn2ClickAuto(a, b) {
+      return a.columns2.clicks.auto.value - b.columns2.clicks.auto.value;
+    },
+    sortColumn2ClickBroad(a, b) {
+      return a.columns2.clicks.broad.value - b.columns2.clicks.broad.value;
+    },
+    sortColumn2ClickExat(a, b) {
+      return a.columns2.clicks.exat.value - b.columns2.clicks.exat.value;
+    },
+    sortColumn2UnitAuto(a, b) {
+      return a.columns2.unitSold.auto.value - b.columns2.unitSold.auto.value;
+    },
+    sortColumn2UnitBroad(a, b) {
+      return a.columns2.unitSold.broad.value - b.columns2.unitSold.broad.value;
+    },
+    sortColumn2UnitExat(a, b) {
+      return a.columns2.unitSold.exat.value - b.columns2.unitSold.exat.value;
     },
     headerRowClass({ row, column, rowIndex, columnIndex }) {
       if (rowIndex === 0) {
@@ -1139,7 +1191,11 @@ export default {
         });
         // options.series[0]['yAxisIndex'] = 1
       }
-      if (options.name === "UCR" || options.name === "广告CR" || options.name === "AdCR") {
+      if (
+        options.name === "UCR" ||
+        options.name === "广告CR" ||
+        options.name === "AdCR"
+      ) {
         options.series.forEach((parent, parentIndex) => {
           if (parent.name === "UCR" || parent.name === "ad CR") {
             parent.data.forEach((item, index) => {
@@ -1440,7 +1496,7 @@ export default {
         const indicator = {
           label: "indicator",
           value: "indicator",
-          children: this.options
+          children: this.options2
         };
         this.differentAsinOptions = [];
         list.forEach(item => {

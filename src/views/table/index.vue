@@ -63,24 +63,30 @@
         </el-select>
       </div>
       <div>
-        <span style="color: #666">站点:</span>
+        <!-- <span style="color: #666">站点:</span> -->
         <el-cascader
           v-model="cascaderStationValue"
           :options="filterStationList"
           :props="{ multiple: true}"
           collapse-tags
           clearable
+          filterable
+          :filter-method="filterMethod"
+          placeholder="请选择站点"
           size="small"
           style="margin-right: 10px;width: 160px"
           @change="stationChange"
         />
-        <span style="color: #666">产品线:</span>
+        <!-- <span style="color: #666">产品线:</span> -->
         <el-cascader
           v-model="productLineValue"
           :options="filterLinesList"
           :props="{ multiple: true}"
           collapse-tags
           clearable
+          filterable
+          :filter-method="filterMethod"
+          placeholder="请选择产品线"
           size="small"
           style="margin-right: 10px;width: 160px"
           @change="productLineChange"
@@ -277,6 +283,12 @@ export default {
     this.baseUrl = process.env.VUE_APP_BASE_API;
   },
   methods: {
+    filterMethod(node, keyword) {
+      let str = node.label;
+      // .slice(0, 1);
+      str = str.toLocaleLowerCase();
+      return str.includes(keyword);
+    },
     productLineChange(value) {
       this.line = value.flat(Infinity);
     },

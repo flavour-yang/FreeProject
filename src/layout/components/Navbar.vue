@@ -78,7 +78,8 @@ export default {
     handleClose(value) {
       this.$store.commit("table/REMOVE_ASIN", value);
       const list = this.$store.state.table.asinList;
-      if (this.asin === value) { // 相同则去除同时刷新当前页面
+      if (this.asin === value) {
+        // 相同则去除同时刷新当前页面
         if (list.length) {
           const asin = list[list.length - 1];
           this.$store.commit("table/SET_ASIN", asin);
@@ -87,6 +88,8 @@ export default {
             query: { asin: asin }
           });
           this.reload();
+        } else { // 清除后跳回table
+          this.$router.push("/table");
         }
       }
     },
