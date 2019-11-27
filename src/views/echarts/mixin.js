@@ -39,7 +39,7 @@ export default {
       }
       if (options.name === 'UCR' || options.name === '广告CR') {
         options.series[0].data.forEach((item, index) => {
-          options.series[0].data[index] = Math.round(item * 10000 / 100)
+          options.series[0].data[index] = Number(item * 100).toFixed(1);
         })
       }
       const echart = echarts.init(dom, "light");
@@ -157,7 +157,7 @@ export default {
       if (options.name === 'UCR' || options.name === 'AdCR') {
         options.series.forEach((parent, parentIndex) => {
           parent.data.forEach((item, index) => {
-            options.series[parentIndex].data[index] = Math.round(item * 10000 / 100)
+            options.series[parentIndex].data[index] = Number(item * 100).toFixed(1);
           })
         })
       }
@@ -428,7 +428,7 @@ export default {
                     ]
                   }
                 };
-                console.log(serie)
+                // console.log(serie)
                 if (obj.chartType === "StackedBarChart") {
                   serie.type = "bar";
                 }

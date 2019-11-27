@@ -170,6 +170,15 @@ export function insertSearchTermReportSign(data) {
     data
   })
 }
+
+export function exportAdAnalysisReport(data) {
+  return request({
+    url: '/api/v1/Product/ExportAdAnalysisReport', // 添加取消否词
+    method: 'post',
+    data
+  })
+}
+
 //
 
 //

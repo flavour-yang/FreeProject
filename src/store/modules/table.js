@@ -1,14 +1,18 @@
 const state = {
   asinList: [],
-  product: {}
+  product: {},
+  asin: ""
 };
 
 const mutations = {
   SET_ASIN: (state, asin) => {
     // debugger
-    // state.asin = asin;
+    state.asin = asin;
     if (!state.asinList.includes(asin)) {
       state.asinList.push(asin)
+      // if (state.asinList.length > 8) {
+      //   state.asinList.shit()
+      // }
     }
   },
   SET_PRODUCT: (state, asin) => {

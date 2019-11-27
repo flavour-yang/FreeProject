@@ -3,7 +3,21 @@
     <!-- <hamburger :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" /> -->
 
     <!-- <breadcrumb class="breadcrumb-container" /> -->
-
+    <span
+      style="color: #409EFF; cursor: pointer;margin: 17px 0 0 20px;display: inline-block;"
+      @click="home"
+    >首页</span>
+    <el-tag
+      v-for="(item, index) in asinList"
+      :key="index"
+      closable
+      :effect="asin === item ? 'dark':'plain'"
+      :disable-transitions="false"
+      style="cursor: pointer;margin: 10px 5px 0;"
+      @click="handleClick(item)"
+      @close="handleClose(item)"
+    >{{ item }}</el-tag>
+    <!-- :effect="asin === item ? 'dark':'plain'" -->
     <div class="right-menu">
       <!-- <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
@@ -53,10 +67,37 @@ export default {
     // Breadcrumb,
     // Hamburger
   },
+  inject: ["reload"],
   computed: {
-    ...mapGetters(["sidebar", "avatar", "name"])
+    ...mapGetters(["sidebar", "avatar", "name", "asinList", "asin"])
   },
   methods: {
+    home() {
+      this.$router.push("/table");
+    },
+    handleClose(value) {
+      this.$store.commit("table/REMOVE_ASIN", value);
+      const list = this.$store.state.table.asinList;
+      if (this.asin === value) { // 相同则去除同时刷新当前页面
+        if (list.length) {
+          const asin = list[list.length - 1];
+          this.$store.commit("table/SET_ASIN", asin);
+          this.$router.push({
+            path: "/echarts/echarts",
+            query: { asin: asin }
+          });
+          this.reload();
+        }
+      }
+    },
+    handleClick(value) {
+      this.$store.commit("table/SET_ASIN", value);
+      this.$router.push({
+        path: "/echarts/echarts",
+        query: { asin: value }
+      });
+      this.reload();
+    },
     toggleSideBar() {
       this.$store.dispatch("app/toggleSideBar");
     },

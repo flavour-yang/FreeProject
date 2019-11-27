@@ -62,11 +62,48 @@
           <!-- 报表类型， 报表站点 -->
         </el-select>
       </div>
-      <el-input v-model="searchVal" placeholder="输入ASIN,FNSKU进行查询" style="width: 300px;">
-        <template slot="append">
-          <el-button icon="el-icon-search" @click="handleSearch" />
-        </template>
-      </el-input>
+      <div>
+        <span style="color: #666">站点:</span>
+        <el-cascader
+          v-model="cascaderStationValue"
+          :options="filterStationList"
+          :props="{ multiple: true}"
+          collapse-tags
+          clearable
+          size="small"
+          style="margin-right: 10px;width: 160px"
+          @change="stationChange"
+        />
+        <span style="color: #666">产品线:</span>
+        <el-cascader
+          v-model="productLineValue"
+          :options="filterLinesList"
+          :props="{ multiple: true}"
+          collapse-tags
+          clearable
+          size="small"
+          style="margin-right: 10px;width: 160px"
+          @change="productLineChange"
+        />
+        <el-input
+          v-model="searchVal"
+          size="small"
+          placeholder="输入ASIN,FNSKU进行查询"
+          style="width: 210px;"
+        />
+        <el-button icon="el-icon-search" size="small" @click="handleSearch">查询</el-button>
+      </div>
+
+      <!-- 站点
+       <el-cascader
+        v-model="stationValue"
+        :options="filterStationList"
+        :props="{ multiple: true}"
+        collapse-tags
+        clearable
+        size="medium"
+        @change="productLineChange"
+      />-->
     </div>
     <!-- <el-upload
       ref="upload"
@@ -91,8 +128,8 @@
       border
       fit
       highlight-current-row
-      @filter-change="fnFilterChangeInit"
     >
+      <!-- @filter-change="fnFilterChangeInit" -->
       <el-table-column label="产品图片" align="center">
         <template slot-scope="scope">
           <el-upload
@@ -126,23 +163,16 @@
           </el-upload>
         </template>
       </el-table-column>
-      <el-table-column
-        label="站点"
-        :filters="filterStationList"
+      <el-table-column label="站点" align="center">
+        <!-- :filters="filterStationList"
         :filter-method="filterTag"
         column-key="tag"
-        filter-placement="bottom"
-        align="center"
-      >
+        filter-placement="bottom"-->
         <template slot-scope="scope">{{ scope.row.station }}</template>
       </el-table-column>
-      <el-table-column
-        filter-placement="bottom"
-        :filters="filterLinesList"
-        column-key="line"
-        label="产品线"
-        align="center"
-      >
+      <el-table-column label="产品线" align="center">
+        <!--column-key="line"  filter-placement="bottom"
+        :filters="filterLinesList"-->
         <template slot-scope="scope">{{ scope.row.line }}</template>
       </el-table-column>
       <!-- <el-table-column label="产品" align="center">
@@ -206,6 +236,8 @@ export default {
       currentPage: 1,
       srcList: [],
       fileList: [],
+      productLineValue: "",
+      cascaderStationValue: "",
       searchVal: "",
       excelList: [],
       stationList: [],
@@ -222,14 +254,14 @@ export default {
     filterStationList() {
       const arr = [];
       this.stationList.forEach(item => {
-        arr.push({ text: item, value: item });
+        arr.push({ label: item, value: item });
       });
       return arr;
     },
     filterLinesList() {
       const arr = [];
       this.linesList.forEach(item => {
-        arr.push({ text: item, value: item });
+        arr.push({ label: item, value: item });
       });
       return arr;
     }
@@ -245,6 +277,12 @@ export default {
     this.baseUrl = process.env.VUE_APP_BASE_API;
   },
   methods: {
+    productLineChange(value) {
+      this.line = value.flat(Infinity);
+    },
+    stationChange(value) {
+      this.line = value.flat(Infinity);
+    },
     handleAsin({ asin, picturePath, name }) {
       this.$store.commit("table/SET_ASIN", asin);
       this.$store.commit("table/SET_PRODUCT", {

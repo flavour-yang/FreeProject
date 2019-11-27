@@ -5,20 +5,18 @@
         <el-card class="box-card" style="margin: 10px">
           <div slot="header" class="clearfix">
             <!-- <span>近三十天数据</span> -->
-            <span style="color: #409EFF; cursor: pointer;" @click="goBack">返回</span>
             <p>
               <span style="font-weight: bold;">ASIN:</span>
               <span class="asin-child" @click="chooseChildAsin()">{{ childAsin }}</span>
             </p>
-            <el-divider />
             <p
               v-for="(key,index) of product"
               v-if="key.asin === asin"
               :key="index"
               style="display: flex; align-items: center;"
             >
-              <span>{{ key.asin }}</span>
-              <img width="40" style="margin-left: 20px" :src="key.src">
+              <span>{{ key.name }}</span>
+              <img width="40" style="margin-left: 40px" :src="key.src">
             </p>
             <el-divider />
             <div>
@@ -57,7 +55,7 @@
       </el-aside>
       <el-container>
         <el-header height="120px">
-          <div>
+          <!-- <div>
             <el-tag
               v-for="(item, index) in asinList"
               :key="index"
@@ -68,7 +66,7 @@
               @click="handleClick(item)"
               @close="handleClose(item)"
             >{{ item }}</el-tag>
-          </div>
+          </div>-->
           <div class="header-cascader">
             <div class="block">
               <span class="demonstration">同一asin指标对比</span>
@@ -79,6 +77,7 @@
                   :props="{ multiple: true}"
                   collapse-tags
                   clearable
+                  @change="sameAsinChange"
                 />
                 <el-button type="primary" @click="showComparison">compare</el-button>
               </div>
@@ -254,10 +253,10 @@
             <el-table-column label="关键字" align="center">
               <template slot-scope="scope">{{ scope.row.keyword }}</template>
             </el-table-column>
-            <el-table-column label="搜索容量" align="center">
+            <el-table-column label="搜索容量排名" align="center">
               <template slot-scope="scope">{{ scope.row.searchCapacity }}</template>
             </el-table-column>
-            <el-table-column label="搜索次数" align="center">
+            <el-table-column label="最新自然搜索排名" align="center">
               <template slot-scope="scope">{{ scope.row.searchNum }}</template>
             </el-table-column>
           </el-table>
@@ -674,7 +673,8 @@ import {
   getAdAnalysisReport,
   getAllCampaignNames,
   insertSearchTermReportRemark,
-  insertSearchTermReportSign
+  insertSearchTermReportSign,
+  exportAdAnalysisReport
 } from "@/api/table";
 import { parseTime } from "@/utils";
 import mixin from "./mixin.js";
@@ -926,30 +926,60 @@ export default {
       this._getKeywordRankReport();
     },
     handleDownload() {
-      this.downloadLoading = true;
-      import("@/utils/ExportExcel").then(excel => {
-        const tHeader = [
-          "customerSearchTerm",
-          "remark",
-          "column1",
-          "Broad",
-          "Exat"
-        ];
-        const filterVal = [
-          "customerSearchTerm",
-          "remark",
-          "column1",
-          "Broad",
-          "Exat"
-        ];
-        const data = this.formatJson(filterVal, this.ADList);
-        excel.export_json_to_excel({
-          header: tHeader,
-          data,
-          filename: "table-list"
-        });
-        this.downloadLoading = false;
+      this.loadingPage = this.$loading({
+        lock: true,
+        text: "Loading",
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.7)"
       });
+      const nameList = [];
+      this.campaignValue.forEach(item => {
+        nameList.push(item);
+      });
+      const params = {
+        campaignNames: nameList,
+        startTime1: this.pickerDataFirstTime[0] || "",
+        endTime1: this.pickerDataFirstTime[1] || "",
+        startTime2: this.pickerDataSecondTime[0] || "",
+        endTime2: this.pickerDataSecondTime[1] || ""
+      };
+      exportAdAnalysisReport(params)
+        .then(res => {
+          this.loadingPage.close();
+          if (res.code === 1000) {
+            window.location.href = res.data;
+          } else {
+            this.$message.info("导出失败!");
+            console.info(res);
+          }
+        })
+        .catch(err => {
+          console.log(err);
+          this.loadingPage.close();
+        });
+      // import("@/utils/ExportExcel").then(excel => {
+      //   const tHeader = [
+      //     "customerSearchTerm",
+      //     "remark",
+      //     "column1",
+      //     "Broad",
+      //     "Exat"
+      //   ];
+      //   const filterVal = [
+      //     "customerSearchTerm",
+      //     "remark",
+      //     "column1",
+      //     "Broad",
+      //     "Exat"
+      //   ];
+      //   const data = this.formatJson(filterVal, this.ADList);
+      //   excel.export_json_to_excel({
+      //     header: tHeader,
+      //     data,
+      //     filename: "table-list"
+      //   });
+      //   this.downloadLoading = false;
+      // });
     },
     formatJson(filterVal, jsonData) {
       return jsonData.map(v =>
@@ -966,10 +996,10 @@ export default {
       this.$router.go(-1);
     },
     formatNum(value) {
-      if (Math.floor(value * 10000) / 100 === 0) {
+      if (Math.round(value * 10000) / 100 === 0) {
         return "0";
       }
-      return Math.floor(value * 10000) / 100 + "%";
+      return Math.round(value * 10000) / 100 + "%";
     },
     resizeChart() {
       // this.myChart.resize({
@@ -1109,9 +1139,15 @@ export default {
         });
         // options.series[0]['yAxisIndex'] = 1
       }
-      if (options.name === "UCR" || options.name === "广告CR") {
-        options.series[0].data.forEach((item, index) => {
-          options.series[0].data[index] = Math.round((item * 10000) / 100);
+      if (options.name === "UCR" || options.name === "广告CR" || options.name === "AdCR") {
+        options.series.forEach((parent, parentIndex) => {
+          if (parent.name === "UCR" || parent.name === "ad CR") {
+            parent.data.forEach((item, index) => {
+              options.series[parentIndex].data[index] = Number(
+                item * 100
+              ).toFixed(1);
+            });
+          }
         });
       }
       echart.setOption(
@@ -1144,15 +1180,17 @@ export default {
             },
             formatter: function(params) {
               let symbol = "";
-              if (
-                params[0].seriesName === "UCR" ||
-                params[0].seriesName === "ad CR"
-              ) {
-                symbol = "%";
-              }
               let str = params[0].axisValue + "<br>";
               // console.log(params)
               for (let i = 0; i < params.length; i++) {
+                if (
+                  params[i].seriesName === "UCR" ||
+                  params[i].seriesName === "ad CR"
+                ) {
+                  symbol = "%";
+                } else {
+                  symbol = "";
+                }
                 if (options.name === "Sales" || options.name === "广告Spend") {
                   str += `${params[i].marker}${params[i].seriesName}: $${params[i].value}<br>`;
                 } else {
