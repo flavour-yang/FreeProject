@@ -3,10 +3,16 @@
     <!-- <hamburger :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" /> -->
 
     <!-- <breadcrumb class="breadcrumb-container" /> -->
-    <span
-      style="color: #409EFF; cursor: pointer;margin: 17px 0 0 20px;display: inline-block;"
-      @click="home"
-    >首页</span>
+    <el-tag style="cursor: pointer;margin: 5px 0 0 20px;" @click="home">首页</el-tag>
+
+    <el-tag
+      v-if="searchTerm"
+      style="cursor: pointer;margin: 10px 5px 0;"
+      closable
+      @close="handleTerm(item)"
+      @click="toSearchTerm"
+    >广告SearchTerm分析</el-tag>
+    <el-divider direction="vertical" />
     <el-tag
       v-for="(item, index) in asinList"
       :key="index"
@@ -54,26 +60,46 @@
         <span style="display:block;font-size: 14px;margin-left: 5px;">退出</span>
       </div>
     </div>
+    <!-- <searchTerm v-model="showSearchTerm" /> -->
   </div>
 </template>
 
 <script>
+// import searchTerm from "@/views/echarts/searchTerm";
 import { mapGetters } from "vuex";
 // import Breadcrumb from '@/components/Breadcrumb'
 // import Hamburger from '@/components/Hamburger'
 
 export default {
   components: {
+    // searchTerm
     // Breadcrumb,
     // Hamburger
   },
   inject: ["reload"],
-  computed: {
-    ...mapGetters(["sidebar", "avatar", "name", "asinList", "asin"])
+  data() {
+    return {
+      showSearchTerm: false
+    };
   },
+  computed: {
+    ...mapGetters([
+      "sidebar",
+      "avatar",
+      "name",
+      "asinList",
+      "asin",
+      "searchTerm"
+    ])
+  },
+
   methods: {
     home() {
       this.$router.push("/table");
+    },
+    toSearchTerm() {
+      // this.showSearchTerm = true;
+      this.$router.push("/searchTerm/searchTerm");
     },
     handleClose(value) {
       this.$store.commit("table/REMOVE_ASIN", value);
@@ -88,10 +114,15 @@ export default {
             query: { asin: asin }
           });
           this.reload();
-        } else { // 清除后跳回table
+        } else {
+          // 清除后跳回table
           this.$router.push("/table");
         }
       }
+    },
+    handleTerm() {
+      this.$store.commit("table/SET_SEARCH_TERM", false);
+      this.$router.push("/table");
     },
     handleClick(value) {
       this.$store.commit("table/SET_ASIN", value);

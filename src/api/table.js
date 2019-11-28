@@ -8,7 +8,7 @@ import qs from 'qs'
 //   })
 // }
 
-export function getProjectList(params) {
+export function getProjectList(data) {
   // params.paramsSerializer = params => {
   //   return qs.stringify(params, {
   //     indices: false
@@ -19,11 +19,14 @@ export function getProjectList(params) {
   // })
   return request({
     url: '/api/v1/Product/list',
-    method: 'get',
-    paramsSerializer: function(params) {
-      return qs.stringify(params, { indices: false })
+    method: 'post',
+    headers: {
+      "content-type": "application/json; charset=utf-8"
     },
-    params
+    // paramsSerializer: function(params) {
+    //   return qs.stringify(params, { indices: false })
+    // },
+    data
   })
 }
 

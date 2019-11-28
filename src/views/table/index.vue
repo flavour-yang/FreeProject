@@ -150,21 +150,24 @@
             :file-list="fileList"
             :show-file-list="false"
           >
-            <el-popover placement="top-start" width="200" trigger="hover">
-              <el-button
-                v-if="!scope.row.picturePath"
-                slot="reference"
-                size="mini"
-                type="primary"
-                @click="handleUpload(scope.row.id)"
-              >点击上传</el-button>
-              <img
-                v-if="scope.row.picturePath"
-                slot="reference"
-                :src="scope.row.picturePath"
-                width="40"
-                @click="handleUpload(scope.row.id)"
-              >
+            <el-popover placement="right-end" trigger="hover">
+              <div v-if="scope.row.picturePath">
+                <img :src="scope.row.picturePath" width="200" alt>
+              </div>
+              <div slot="reference">
+                <el-button
+                  v-if="!scope.row.picturePath"
+                  size="mini"
+                  type="primary"
+                  @click="handleUpload(scope.row.id)"
+                >点击上传</el-button>
+                <img
+                  v-if="scope.row.picturePath"
+                  :src="scope.row.picturePath"
+                  width="40"
+                  @click="handleUpload(scope.row.id)"
+                >
+              </div>
             </el-popover>
           </el-upload>
         </template>
@@ -250,8 +253,8 @@ export default {
       excelValue: "",
       stationValue: "",
       showStationFilter: true,
-      station: "",
-      line: "",
+      station: [],
+      line: [],
       upLoadDisabled: false,
       linesList: []
     };
@@ -290,10 +293,10 @@ export default {
       return str.includes(keyword);
     },
     productLineChange(value) {
-      this.line = value.flat(Infinity);
+      this.line = value.flat(Infinity)
     },
     stationChange(value) {
-      this.line = value.flat(Infinity);
+      this.station = value.flat(Infinity)
     },
     handleAsin({ asin, picturePath, name }) {
       this.$store.commit("table/SET_ASIN", asin);
@@ -406,9 +409,9 @@ export default {
       this.listLoading = true;
       const params = {
         // StationName: this.searchVal,
-        Stations: this.station,
-        Lines: this.line,
-        Key: this.searchVal,
+        stations: this.station,
+        lines: this.line,
+        key: this.searchVal,
         pageSize: this.pageSize,
         pageIndex: this.currentPage
       };

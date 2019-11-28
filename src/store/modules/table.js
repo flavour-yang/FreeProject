@@ -1,18 +1,20 @@
 const state = {
   asinList: [],
   product: {},
-  asin: ""
+  asin: "",
+  searchTerm: false
 };
 
 const mutations = {
   SET_ASIN: (state, asin) => {
     // debugger
     state.asin = asin;
+
     if (!state.asinList.includes(asin)) {
+      if (state.asinList.length > 8) {
+        state.asinList.shift()
+      }
       state.asinList.push(asin)
-      // if (state.asinList.length > 8) {
-      //   state.asinList.shit()
-      // }
     }
   },
   SET_PRODUCT: (state, asin) => {
@@ -23,6 +25,9 @@ const mutations = {
     const index = state.asinList.indexOf(asin)
     state.asinList.splice(index, 1)
     // state.push(asin)
+  },
+  SET_SEARCH_TERM: (state, value) => {
+    state.searchTerm = value
   }
 };
 

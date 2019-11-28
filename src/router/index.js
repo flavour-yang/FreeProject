@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2019-10-29 14:04:54
- * @LastEditTime: 2019-11-07 11:31:10
+ * @LastEditTime: 2019-11-28 16:47:34
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \vue-admin-template\src\router\index.js
@@ -134,6 +134,20 @@ export const constantRoutes = [
       }
     ]
   },
+  {
+    path: '/searchTerm',
+    component: Layout,
+    redirect: '/searchTerm',
+    children: [
+      {
+        path: 'searchTerm',
+        name: 'searchTerm',
+        component: () => import('@/views/searchTerm/searchTerm'),
+        meta: { title: 'searchTerm', icon: 'echarts' }
+      }
+    ]
+  },
+
   // {
   //   path: '/nested',
   //   component: Layout,
