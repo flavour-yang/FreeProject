@@ -154,6 +154,8 @@ export default {
     },
     initDiffEchart(options, dom) { // 多asin,比较echart
       options.series = options.series.reverse()
+      console.log(options)
+
       if (options.name === 'UCR' || options.name === 'AdCR') {
         options.series.forEach((parent, parentIndex) => {
           parent.data.forEach((item, index) => {
@@ -212,7 +214,7 @@ export default {
               if (obj[options.series[i].selfData]) { // 存在则追加
                 obj[options.series[i].selfData] += `${params[i].marker}${params[i].seriesName}: ${params[i].value}<br>`
               } else { // 不存在则赋值
-                if (options.name === 'Sales' || options.name === "AdSpend") {
+                if (params.name === 'Sales' || options.name === "AdSpend") {
                   obj[options.series[i].selfData] = `${params[i].marker}${params[i].seriesName}: $${params[i].value}<br>`
                 } else if (options.name === 'UCR' || options.name === 'AdCR') {
                   obj[options.series[i].selfData] = `${params[i].marker}${params[i].seriesName}: ${params[i].value}%<br>`
@@ -273,7 +275,25 @@ export default {
               }
             },
             axisLabel: {
-              formatter: options.name === 'UCR' || options.name === '广告CR' ? '{value} %' : options.name === "Sales" || options.name === "广告Spend" ? '${value}' : '{value}'
+              formatter: function(value, index) {
+                // debugger
+                // console.log(value, index);
+                // 格式化成月/日，只在第一个刻度显示年份
+                if (
+                  options.yName.indexOf("UCR") === 0 ||
+                  options.yName.indexOf("ad CR") === 0
+                ) {
+                  return `${value}%`;
+                }
+                if (
+                  options.yName.indexOf("sale") === 0 ||
+                  options.yName.indexOf("spend") === 0
+                ) {
+                  return `$${value}`;
+                }
+                // texts.unshift(date.getYear());
+                return value;
+              }
             },
             type: "value"
             // name: ""
@@ -299,11 +319,20 @@ export default {
           indicatorsArr.push(str)
         }
       })
+      // let arr = []
+      // arr.forEach(item => {
+      //   arr.push({ ASIN: item, Station: this.station })
+      // })
       const params = {
         indicators: indicatorsArr,
         startTime: start,
         endTime: end,
-        asins: asin
+        asins: [
+          {
+            ASIN: asin[0],
+            Station: this.station
+          }
+        ]
       };
       getCharts(params).then(res => {
         console.timeEnd("charts");
@@ -384,7 +413,12 @@ export default {
         indicators: indicators,
         startTime: start,
         endTime: end,
-        asins: asin
+        asins: [
+          {
+            ASIN: asin[0],
+            Station: this.station
+          }
+        ]
       };
       getCharts(params).then(res => {
         console.timeEnd("charts");
@@ -468,14 +502,21 @@ export default {
         }
       });
     },
-    _diffAsin(indicators, asin) {
+    _diffAsin(indicators, asin) { // 不同asin
       //   debugger
+      const arr = []
+      asin.forEach(item => {
+        arr.push({
+          ASIN: item,
+          Station: this.station
+        })
+      })
       const start = this.pickerDataSameAsin[0] || this.startTime; const end = this.pickerDataSameAsin[1] || this.endTime
       const params = {
         indicators: indicators,
         startTime: start,
         endTime: end,
-        asins: asin
+        asins: arr
       };
       getCharts(params).then(res => {
         const list = res.data;
@@ -555,9 +596,5 @@ export default {
         }
       });
     }
-    // swapArr(arr, index1, index2) {
-    //   arr[index1] = arr.splice(index2, 1, arr[index1])[0];
-    //   return arr;
-    // }
   }
 }

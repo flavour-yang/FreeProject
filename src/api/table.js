@@ -30,7 +30,7 @@ export function getProjectList(data) {
   })
 }
 
-export function insertExcelData(data) { // 上传产品图片
+export function insertExcelData(data) { // 上传产品
   return request({
     url: '/api/v1/Product/InsertExcelData',
     method: 'post',
@@ -78,10 +78,11 @@ export function getRecent(params) {
   })
 }
 
-export function getCharts(data) { // 获取图标数据
+export function getCharts(data) { // 获取图表数据
   return request({
     url: '/api/v1/Product/GetCharts',
     method: 'post',
+    timeout: 10000,
     headers: {
       'Content-Type': ' application/json; charset=utf-8'
     },
@@ -97,33 +98,39 @@ export function getParentASIN(params) { // 获取父asin
   })
 }
 
-export function geRma(params) { // 获取rma
+export function geRma(data) { // 获取rma
   return request({
     url: '/api/v1/Product/GetRmas',
-    method: 'get',
-    params
+    method: 'post',
+    data
   })
 }
 
-export function getKeywordRankReport(params) { // //获取Keyword报表
+export function getKeywordRankReport(data) { // //获取Keyword报表
   return request({
     url: '/api/v1/Product/GetKeywordRankReport',
-    method: 'get',
+    method: 'post',
     headers: {
-      "content-type": "application/json; charset=utf-8"
+      'Content-Type': 'application/json; charset=utf-8'
     },
+    // headers: {
+    //   "content-type": "application/json; charset=utf-8"
+    // },
     // paramsSerializer: function(params) {
     //   return qs.stringify(params, { indices: false })
     // },
-    params
+    data
   })
 }
 
-export function getKeywordChart(params) { // //获取keyword图表
+export function getKeywordChart(data) { // //获取keyword图表
   return request({
     url: '/api/v1/Product/GetKeywordChart',
-    method: 'get',
-    params
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8'
+    },
+    data
   })
 }
 

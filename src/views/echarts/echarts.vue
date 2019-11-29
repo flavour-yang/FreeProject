@@ -20,8 +20,8 @@
                 v-for="(item, index) in parentAsinList"
                 :key="index"
                 class="asin-parent"
-                @click="chooseParentAsin(item)"
-              >{{ item }}</span>
+                @click="chooseParentAsin(item.asin)"
+              >{{ item.asin }}</span>
             </div>
           </div>
           <div class="card-info">
@@ -298,6 +298,7 @@ export default {
       startTime: "",
       endTime: "",
       asin: "",
+      station: "",
       childAsin: "",
       campaignValue: "",
       loadingPage: "",
@@ -434,11 +435,13 @@ export default {
     this.startTime = `${end.getFullYear()}-${end.getMonth() +
       1}-${end.getDate()}`;
 
-    const asin = this.$route.query.asin;
+    const { asin, id, station } = this.$route.query;
     this.childAsin = asin;
     this.asin = asin;
-    this._getRecent(asin);
-    this._getCharts(asin);
+    this.station = station;
+    console.log('id', id)
+    this._getRecent(asin); // 最近三十天数据
+    this._getCharts({ asin: asin, station: station });
     this._getParentASIN(asin);
   },
   destroyed() {
@@ -462,25 +465,18 @@ export default {
         });
       }
     },
-    handleClick(value) {
-      this.asin = value;
-      this.childAsin = value;
-      this._getRecent(value);
-      this._getCharts(value);
-      this._getParentASIN(value);
-    },
-    handleClose(value) {
-      this.$store.commit("table/REMOVE_ASIN", value);
-      const list = this.$store.state.table.asinList;
-      if (list.length) {
-        const asin = list[list.length - 1];
-        this.asin = asin;
-        this.childAsin = asin;
-        this._getRecent(asin);
-        this._getCharts(asin);
-        this._getParentASIN(asin);
-      }
-    },
+    // handleClose(value) {
+    //   this.$store.commit("table/REMOVE_ASIN", value);
+    //   const list = this.$store.state.table.asinList;
+    //   if (list.length) {
+    //     const asin = list[list.length - 1];
+    //     this.asin = asin.asin;
+    //     this.childAsin = asin.asin;
+    //     this._getRecent(asin.asin);
+    //     this._getCharts(asin.asin);
+    //     this._getParentASIN(asin.asin);
+    //   }
+    // },
 
     handleCurrentChange(page) {
       // console.log(this.currentPage, page)
@@ -510,12 +506,12 @@ export default {
     chooseChildAsin() {
       this.asin = this.childAsin;
       this._getRecent(this.asin);
-      this._getCharts(this.asin);
+      this._getCharts({ asin: this.asin, station: this.station });
     },
     chooseParentAsin(value) {
       this.asin = value;
       this._getRecent(value);
-      this._getCharts(value);
+      this._getCharts({ asin: value, station: this.station });
       // this._getParentASIN(value);
       // this._getRma();
     },
@@ -593,7 +589,6 @@ export default {
         });
         // options.series[0]['yAxisIndex'] = 1
       }
-      console.log(options);
       if (
         options.yName.includes("UCR") ||
         options.yName.includes("ad CR") ||
@@ -746,101 +741,107 @@ export default {
       window.addEventListener("resize", this.resizeChart);
     },
     _getRecent(value) {
-      getRecent({ asin: value }).then(res => {
+      getRecent({ ASIN: value, Station: this.station }).then(res => {
         this.recentData = res.data;
         // debugger;
       });
     },
-    _getCharts(value) {
+    _getCharts({ asin, station }) {
       const params = {
         indicators: this.indicators,
         startTime: this.startTime,
         endTime: this.endTime,
-        asins: [value]
+        asins: [
+          {
+            ASIN: asin,
+            Station: station
+          }
+        ]
       };
-      getCharts(params).then(res => {
-        console.timeEnd("charts");
-        this.echartList = [];
-        const list = res.data;
-        const echartList = [];
-        // "LineChart","StackedBarChart","BarChart"
-        if (list && list.length) {
-          console.time();
-          list.forEach(el => {
-            const obj = {
-              name: "",
-              chartType: "",
-              xValue: [],
-              yValue: [],
-              yName: [],
-              series: []
-            };
-            let str = "";
-            if (el.indicator.includes("Ad")) {
-              str = el.indicator.slice(2, el.indicator.length);
-              str = "广告" + str;
-            } else {
-              str = el.indicator;
-            }
-            // const arr = [];
-            obj.xValue = el.xNames;
-            obj.name = str;
-            obj.chartType = el.chartData[0].chartType;
-            el.chartData[0].data.forEach((item, index) => {
-              const serie = {
-                name: item.yName,
-                data: [],
-                type: "bar",
-                stack: "总数"
+      getCharts(params)
+        .then(res => {
+          this.echartList = [];
+          const list = res.data;
+          const echartList = [];
+          // "LineChart","StackedBarChart","BarChart"
+          if (list && list.length) {
+            list.forEach(el => {
+              const obj = {
+                name: "",
+                chartType: "",
+                xValue: [],
+                yValue: [],
+                yName: [],
+                series: []
               };
-              if (obj.chartType === "StackedBarChart") {
-                serie.type = "bar";
+              let str = "";
+              if (el.indicator.includes("Ad")) {
+                str = el.indicator.slice(2, el.indicator.length);
+                str = "广告" + str;
+              } else {
+                str = el.indicator;
               }
-              if (obj.chartType === "LineChart") {
-                serie.type = "line";
-                delete serie.stack;
-              }
-              if (obj.chartType === "BarChart") {
-                serie.type = "bar";
-                delete serie.stack;
-              }
-              if (obj.chartType === "StackedBarChart" && index === 0) {
-                serie.type = "line";
-                delete serie.stack;
-              }
-              serie.data = item.values;
-              obj.series.push(serie);
-              obj.yValue.push(item.values);
-              obj.yName.push(item.yName);
+              // const arr = [];
+              obj.xValue = el.xNames;
+              obj.name = str;
+              obj.chartType = el.chartData[0].chartType;
+              el.chartData[0].data.forEach((item, index) => {
+                const serie = {
+                  name: item.yName,
+                  data: [],
+                  type: "bar",
+                  stack: "总数"
+                };
+                if (obj.chartType === "StackedBarChart") {
+                  serie.type = "bar";
+                }
+                if (obj.chartType === "LineChart") {
+                  serie.type = "line";
+                  delete serie.stack;
+                }
+                if (obj.chartType === "BarChart") {
+                  serie.type = "bar";
+                  delete serie.stack;
+                }
+                if (obj.chartType === "StackedBarChart" && index === 0) {
+                  serie.type = "line";
+                  delete serie.stack;
+                }
+                serie.data = item.values;
+                obj.series.push(serie);
+                obj.yValue.push(item.values);
+                obj.yName.push(item.yName);
+              });
+              echartList.push(obj);
             });
-            echartList.push(obj);
-          });
-          console.timeEnd();
-          this.echartList = echartList;
-          console.log(echartList);
-          setTimeout(() => {
-            this.domEchart = document.querySelectorAll(".echart-content");
-            // console.log(this.domEchart);
-            echartList.forEach((item, index) => {
-              this.initEchart(item, this.domEchart[index]);
-            });
-            this.loadingPage.close();
-          }, 20);
-          this._getAllAsin();
-        }
-        // console.log(this.echartList);
-      });
+            this.echartList = echartList;
+            setTimeout(() => {
+              this.domEchart = document.querySelectorAll(".echart-content");
+              // console.log(this.domEchart);
+              echartList.forEach((item, index) => {
+                this.initEchart(item, this.domEchart[index]);
+              });
+              this.loadingPage.close();
+            }, 20);
+            this._getAllAsin();
+          }
+          // console.log(this.echartList);
+        })
+        .catch(() => this.loadingPage.close());
     },
     _getParentASIN(value) {
-      getParentASIN({ childASIN: value }).then(res => {
+      getParentASIN({ ASIN: value, Station: this.station }).then(res => {
         this.parentAsinList = res.data;
       });
     },
     _getRma() {
       const params = {
-        StartTime: this.pickerDataRma[0] || this.startTime,
-        EndTime: this.pickerDataRma[1] || this.endTime,
-        ASIN: this.asin
+        startTime: this.pickerDataRma[0] || this.startTime,
+        endTime: this.pickerDataRma[1] || this.endTime,
+        ASIN: {
+          ASIN: this.asin,
+          Station: this.station
+        }
       };
       geRma(params).then(res => {
         // console.log(res);
@@ -851,9 +852,12 @@ export default {
     _getKeywordRankReport() {
       // 获取报表
       const params = {
-        StartTime: this.pickerDataKwtrend[0] || this.startTime,
-        EndTime: this.pickerDataKwtrend[1] || this.endTime,
-        ASIN: this.asin,
+        startTime: this.pickerDataKwtrend[0] || this.startTime,
+        endTime: this.pickerDataKwtrend[1] || this.endTime,
+        ASIN: {
+          ASIN: this.asin,
+          Station: this.station
+        },
         PageIndex: this.keyWordPageIndex,
         PageSize: this.keyWordPageSize
       };
@@ -869,7 +873,10 @@ export default {
         keyword: keyword,
         startTime: this.pickerDataKwtrend[0] || this.startTime,
         endTime: this.pickerDataKwtrend[1] || this.endTime,
-        asin: this.asin
+        ASIN: {
+          ASIN: this.asin,
+          Station: this.station
+        }
       };
       getKeywordChart(params).then(res => {
         const data = res.data;
@@ -921,7 +928,7 @@ export default {
       });
     },
     _getAllAsin() {
-      getAllAsin().then(res => {
+      getAllAsin({ station: this.station }).then(res => {
         const list = res.data;
         const obj = {
           label: "ASIN",
@@ -936,8 +943,8 @@ export default {
         this.differentAsinOptions = [];
         list.forEach(item => {
           obj.children.push({
-            value: item,
-            label: item
+            value: item.asin,
+            label: item.asin
           });
         });
         this.differentAsinOptions.push(indicator);

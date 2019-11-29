@@ -17,12 +17,12 @@
       v-for="(item, index) in asinList"
       :key="index"
       closable
-      :effect="asin === item ? 'dark':'plain'"
+      :effect="asin === item.asin ? 'dark':'plain'"
       :disable-transitions="false"
       style="cursor: pointer;margin: 10px 5px 0;"
       @click="handleClick(item)"
       @close="handleClose(item)"
-    >{{ item }}</el-tag>
+    >{{ item.asin }}</el-tag>
     <!-- :effect="asin === item ? 'dark':'plain'" -->
     <div class="right-menu">
       <!-- <el-dropdown class="avatar-container" trigger="click">
@@ -89,7 +89,8 @@ export default {
       "name",
       "asinList",
       "asin",
-      "searchTerm"
+      "searchTerm",
+      "station"
     ])
   },
 
@@ -104,14 +105,14 @@ export default {
     handleClose(value) {
       this.$store.commit("table/REMOVE_ASIN", value);
       const list = this.$store.state.table.asinList;
-      if (this.asin === value) {
+      if (this.asin === value.asin) {
         // 相同则去除同时刷新当前页面
         if (list.length) {
           const asin = list[list.length - 1];
           this.$store.commit("table/SET_ASIN", asin);
           this.$router.push({
             path: "/echarts/echarts",
-            query: { asin: asin }
+            query: { asin: asin.asin, station: asin.station, id: asin.id }
           });
           this.reload();
         } else {
@@ -128,7 +129,7 @@ export default {
       this.$store.commit("table/SET_ASIN", value);
       this.$router.push({
         path: "/echarts/echarts",
-        query: { asin: value }
+        query: value
       });
       this.reload();
     },

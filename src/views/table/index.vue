@@ -152,7 +152,7 @@
           >
             <el-popover placement="right-end" trigger="hover">
               <div v-if="scope.row.picturePath">
-                <img :src="scope.row.picturePath" width="200" alt>
+                <img :src="scope.row.picturePath" width="200">
               </div>
               <div slot="reference">
                 <el-button
@@ -293,21 +293,25 @@ export default {
       return str.includes(keyword);
     },
     productLineChange(value) {
-      this.line = value.flat(Infinity)
+      this.line = value.flat(Infinity);
     },
     stationChange(value) {
-      this.station = value.flat(Infinity)
+      this.station = value.flat(Infinity);
     },
-    handleAsin({ asin, picturePath, name }) {
-      this.$store.commit("table/SET_ASIN", asin);
+    handleAsin({ asin, picturePath, name, station, id }) {
+      this.$store.commit("table/SET_ASIN", {
+        asin,
+        station,
+        id
+      });
       this.$store.commit("table/SET_PRODUCT", {
-        asin: asin,
+        asin,
         src: picturePath,
-        name: name
+        name
       });
       this.$router.push({
         path: "/echarts/echarts",
-        query: { asin: asin }
+        query: { asin, station, id }
       });
     },
     handleSizeChange() {},
@@ -330,17 +334,24 @@ export default {
       if (a.code === 1000) {
         return insertExcelData({
           excelType: this.excelValue,
+          station: this.stationValue,
           attachmentGuid: a.data[0]
-        }).then(res => {
-          this.loading.close();
-          if (res.code === 1000) {
-            this.$message.success("附件上传成功!");
-          }
-        });
+        })
+          .then(res => {
+            this.loading.close();
+            if (res.code === 1000) {
+              this.$message.success("附件上传成功!");
+            }
+          })
+          .catch(err => {
+            this.loading.close();
+            this.$message.error("上传失败!");
+            console.log(err);
+          });
       } else {
+        this.loading.close();
         this.$message.success("上传失败!");
         console.log(a, b);
-        this.loading.close();
       }
     },
     handleError() {
