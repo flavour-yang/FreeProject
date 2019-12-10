@@ -1,7 +1,7 @@
 <!--
  * @Author: your name
  * @Date: 2019-10-29 14:04:54
- * @LastEditTime: 2019-11-02 12:28:36
+ * @LastEditTime: 2019-12-10 17:27:43
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \vue-admin-template\src\views\login\index.vue
@@ -54,109 +54,143 @@
           <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
         </span>
       </el-form-item>
-
+      <el-checkbox v-model="checked" style="margin-bottom: 12px;">记住密码</el-checkbox>
       <el-button
         :loading="loading"
         type="primary"
         style="width:100%;margin-bottom:30px;"
         @click.native.prevent="handleLogin"
       >Login</el-button>
-
     </el-form>
     <div class="login-background" />
   </div>
 </template>
 
 <script>
-import { validUsername } from '@/utils/validate'
+import { validUsername } from "@/utils/validate";
+import Cookies from "js-cookie";
 // var MD5 = require('blueimp-md5/js/md5')
-import MD5 from 'js-md5'
+import MD5 from "js-md5";
 export default {
-  name: 'Login',
+  name: "Login",
   data() {
     const validateUsername = (rule, value, callback) => {
       if (!validUsername(value)) {
-        callback(new Error('Please enter the correct user name'))
+        callback(new Error("Please enter the correct user name"));
       } else {
-        callback()
+        callback();
       }
-    }
+    };
     const validatePassword = (rule, value, callback) => {
-      if (value.length < 6) {
-        callback(new Error('The password can not be less than 6 digits'))
+      if (!value.length) {
+        callback(new Error("The password can not be less than 1 digits"));
       } else {
-        callback()
+        callback();
       }
-    }
+    };
     return {
       loginForm: {
-        LoginName: 'admin',
-        Password: '123456'
+        LoginName: "",
+        Password: ""
       },
+      checked: false,
       loginRules: {
         LoginName: [
-          { required: true, trigger: 'blur', validator: validateUsername }
+          { required: true, trigger: "blur", validator: validateUsername }
         ],
         Password: [
-          { required: true, trigger: 'blur', validator: validatePassword }
+          { required: true, trigger: "blur", validator: validatePassword }
         ]
       },
       loading: false,
-      passwordType: 'password',
+      passwordType: "password",
       redirect: undefined
-    }
+    };
   },
   watch: {
     $route: {
       handler: function(route) {
-        this.redirect = route.query && route.query.redirect
+        this.redirect = route.query && route.query.redirect;
       },
       immediate: true
+    },
+    checked(val) {
+      localStorage.setItem("checked", val);
     }
+  },
+  mounted() {
+    //
+    if (localStorage.getItem("checked") === "true") {
+      this.checked = true;
+    }
+
+    this.loginForm.LoginName = Cookies.get("LoginName");
+    this.loginForm.Password = Cookies.get("Password");
   },
   methods: {
     showPwd() {
-      if (this.passwordType === 'password') {
-        this.passwordType = ''
+      if (this.passwordType === "password") {
+        this.passwordType = "";
       } else {
-        this.passwordType = 'password'
+        this.passwordType = "password";
       }
       this.$nextTick(() => {
-        this.$refs.Password.focus()
-      })
+        this.$refs.Password.focus();
+      });
     },
     handleLogin() {
       this.$refs.loginForm.validate(valid => {
         const loginInfo = {
           LoginName: this.loginForm.LoginName,
-          Password: MD5.base64(this.loginForm.Password)
+          Password: ""
+        };
+        if (
+          Cookies.get("Password") &&
+          Cookies.get("Password") === this.loginForm.Password
+        ) {
+          loginInfo.Password = Cookies.get("Password");
+        } else {
+          loginInfo.Password = MD5.base64(this.loginForm.Password);
         }
+
         if (valid) {
-          this.loading = true
+          this.loading = true;
           this.$store
-            .dispatch('user/login', loginInfo)
+            .dispatch("user/login", loginInfo)
             .then(() => {
-              this.$store.dispatch('user/addRouter').then(res => {
+              this.$store.dispatch("user/addRouter").then(res => {
+                if (this.checked) {
+                  Cookies.set("LoginName", this.loginForm.LoginName);
+                  if (!Cookies.get("Password")) {
+                    Cookies.set(
+                      "Password",
+                      MD5.base64(this.loginForm.Password)
+                    );
+                  }
+                } else {
+                  Cookies.remove("LoginName");
+                  Cookies.remove("Password");
+                }
                 // this.$router.options.routes.push(res[0])
-                this.$router.addRoutes(res)
+                this.$router.addRoutes(res);
                 // debugger
-                this.$router.push({ path: this.redirect || '/' })
-                this.loading = false
+                this.$router.push({ path: this.redirect || "/" });
+                this.loading = false;
                 // next({ ...to})
-              })
+              });
               // debugger
             })
             .catch(() => {
-              this.loading = false
-            })
+              this.loading = false;
+            });
         } else {
-          console.log('error submit!!')
-          return false
+          console.log("error submit!!");
+          return false;
         }
-      })
+      });
     }
   }
-}
+};
 </script>
 
 <style lang="scss">

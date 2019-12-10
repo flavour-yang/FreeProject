@@ -286,6 +286,7 @@ import {
 import mixin from "./mixin.js";
 import { mapGetters } from "vuex";
 export default {
+  name: "Echarts",
   mixins: [mixin],
   data() {
     return {
@@ -439,7 +440,7 @@ export default {
     this.childAsin = asin;
     this.asin = asin;
     this.station = station;
-    console.log('id', id)
+    console.log("id", id);
     this._getRecent(asin); // 最近三十天数据
     this._getCharts({ asin: asin, station: station });
     this._getParentASIN(asin);
@@ -465,19 +466,6 @@ export default {
         });
       }
     },
-    // handleClose(value) {
-    //   this.$store.commit("table/REMOVE_ASIN", value);
-    //   const list = this.$store.state.table.asinList;
-    //   if (list.length) {
-    //     const asin = list[list.length - 1];
-    //     this.asin = asin.asin;
-    //     this.childAsin = asin.asin;
-    //     this._getRecent(asin.asin);
-    //     this._getCharts(asin.asin);
-    //     this._getParentASIN(asin.asin);
-    //   }
-    // },
-
     handleCurrentChange(page) {
       // console.log(this.currentPage, page)
       this._getKeywordRankReport();
@@ -504,11 +492,23 @@ export default {
       this.dialogDifferentAsin = true;
     },
     chooseChildAsin() {
+      this.loadingPage = this.$loading({
+        lock: true,
+        text: "Loading",
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.7)"
+      });
       this.asin = this.childAsin;
       this._getRecent(this.asin);
       this._getCharts({ asin: this.asin, station: this.station });
     },
     chooseParentAsin(value) {
+      this.loadingPage = this.$loading({
+        lock: true,
+        text: "Loading",
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.7)"
+      });
       this.asin = value;
       this._getRecent(value);
       this._getCharts({ asin: value, station: this.station });
@@ -969,6 +969,8 @@ export default {
   .asin-parent,
   .asin-child {
     cursor: pointer;
+    word-break: break-all;
+    margin-left: 8px;
     &:hover {
       color: $menuActiveText;
       text-decoration: underline;

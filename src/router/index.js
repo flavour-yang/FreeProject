@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2019-10-29 14:04:54
- * @LastEditTime: 2019-11-28 16:47:34
+ * @LastEditTime: 2019-12-04 10:13:02
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \vue-admin-template\src\router\index.js
@@ -125,12 +125,14 @@ export const constantRoutes = [
     path: '/echarts',
     component: Layout,
     redirect: '/echarts',
+    name: 'echarts-parent',
+    meta: { noCache: false },
     children: [
       {
         path: 'echarts',
         name: 'Echarts',
         component: () => import('@/views/echarts/echarts'),
-        meta: { title: 'Echarts', icon: 'echarts' }
+        meta: { title: 'Echarts', icon: 'echarts', noCache: false }
       }
     ]
   },
